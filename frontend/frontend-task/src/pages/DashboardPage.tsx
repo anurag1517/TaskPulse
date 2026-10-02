@@ -359,26 +359,6 @@ export function DashboardPage() {
                                     >
                                         View P1 Tasks (👹 {counts.p1})
                                     </Button>
-                                    <Button
-                                        variant="secondary"
-                                        size="sm"
-                                        onClick={() => {
-                                            const urgentTask = tasks.find((t) => !t.done && t.pri === 1);
-                                            const title = `🚨 URGENT P1: ${urgentTask?.topic || 'Critical Priority Item'}`;
-                                            const body = urgentTask?.loc
-                                                ? `Pending at ${urgentTask.loc}. Immediate action required!`
-                                                : 'Immediate focus required on this pending task!';
-
-                                            showDesktopNotification(title, body);
-
-                                            if ('Notification' in window && Notification.permission !== 'granted') {
-                                                handleEnablePush();
-                                            }
-                                        }}
-                                        title="Trigger an alert test to see notification on your laptop"
-                                    >
-                                        🔔 Test Alert
-                                    </Button>
                                 </div>
                             </div>
                         )}

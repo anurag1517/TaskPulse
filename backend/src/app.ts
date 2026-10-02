@@ -4,38 +4,32 @@ import { errorHandler } from "./middleware/errorHandler";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { env } from "./config/env";
+import { burstLimiter, globalLimiter } from "./middleware/rateLimiter";
+import { notFound } from "./middleware/notFound";
+import helmet from "helmet";
 
 export function createApp() {
     const app = express();
+    app.set("trust proxy", 1);
+
+    app.get("/health", (_req, res) =>
+        res.status(200).json({ status: "ok", uptime: process.uptime(), timestamp: new Date().toISOString() }));
 
     if (env.isProduction) {
-        app.enable('trust proxy');
-        app.use((req, res, next) => {
-            if (!req.secure && req.headers['x-forwarded-proto'] !== 'https') {
-                return res.redirect(301, `https://${req.headers.host}${req.url}`);
-            }
-            next();
-        });
+        app.use((req, res, next) =>
+            req.secure ? next() : res.redirect(308, `https://${req.headers.host}${req.originalUrl}`));
     }
 
-    app.use(express.json());
-    app.use(cookieParser());
-    const rawOrigins = (env.corsOrigin || "http://localhost:5173").includes(',')
-        ? env.corsOrigin.split(',').map((origin) => origin.trim())
-        : [env.corsOrigin ? env.corsOrigin.trim() : "http://localhost:5173"];
-    const sanitizedOrigins = rawOrigins.map((origin) => origin.replace(/\/+$/, ''));
+    const allowedOrigins = (env.corsOrigin || "http://localhost:5173")
+        .split(",").map(o => o.trim().replace(/\/+$/, "")).filter(Boolean);
 
-    app.use(cors({
-        origin: sanitizedOrigins.length === 1 ? sanitizedOrigins[0] : sanitizedOrigins,
-        credentials: true,
-    }));
-    app.use(express.urlencoded({
-        extended: true
-    }));
-    app.get("/health", (_req, res) => {
-        res.status(200).json({ status: "ok", uptime: process.uptime(), timestamp: new Date().toISOString() });
-    });
+    app.use(helmet());
+    app.use(cors({ origin: allowedOrigins, credentials: true }));
+    app.use("/api", burstLimiter, globalLimiter);
+    app.use(express.json({ limit: "20kb" }));
+    app.use(cookieParser());
     app.use("/api", apiRouter);
+    app.use(notFound);
     app.use(errorHandler);
     return app;
 }

@@ -1,0 +1,215 @@
+:root {
+  --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Theme Backgrounds */
+  --bg-deep: #080b12;
+  --bg-surface: #0e1422;
+  --bg-card: rgba(16, 22, 36, 0.72);
+  --bg-card-hover: rgba(22, 30, 48, 0.85);
+  --bg-glass: rgba(18, 26, 44, 0.6);
+  --bg-input: rgba(10, 15, 26, 0.75);
+
+  /* Borders & Dividers */
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-glass: rgba(255, 255, 255, 0.12);
+  --border-focus: #6366f1;
+
+  /* Typography Colors */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  /* Brand Accents */
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-glow: rgba(99, 102, 241, 0.35);
+
+  /* P1 - CRITICAL / SCARY (Crimson) */
+  --p1-base: #ef4444;
+  --p1-dark: #450a0a;
+  --p1-light: #fecaca;
+  --p1-border: rgba(239, 68, 68, 0.45);
+  --p1-glow: rgba(239, 68, 68, 0.35);
+  --p1-gradient: linear-gradient(135deg, rgba(69, 10, 10, 0.95), rgba(127, 29, 29, 0.8));
+
+  /* P2 - HIGH / TICKING (Amber) */
+  --p2-base: #f59e0b;
+  --p2-dark: #451a03;
+  --p2-light: #fef3c7;
+  --p2-border: rgba(245, 158, 11, 0.45);
+  --p2-glow: rgba(245, 158, 11, 0.3);
+  --p2-gradient: linear-gradient(135deg, rgba(69, 26, 3, 0.95), rgba(120, 53, 15, 0.8));
+
+  /* P3 - NORMAL / FOCUSED (Cyan) */
+  --p3-base: #06b6d4;
+  --p3-dark: #083344;
+  --p3-light: #cffafe;
+  --p3-border: rgba(6, 182, 212, 0.4);
+  --p3-glow: rgba(6, 182, 212, 0.25);
+  --p3-gradient: linear-gradient(135deg, rgba(8, 51, 68, 0.95), rgba(14, 116, 144, 0.8));
+
+  /* P4 - LOW / ZEN (Mint) */
+  --p4-base: #10b981;
+  --p4-dark: #022c22;
+  --p4-light: #d1fae5;
+  --p4-border: rgba(16, 185, 129, 0.35);
+  --p4-glow: rgba(16, 185, 129, 0.2);
+  --p4-gradient: linear-gradient(135deg, rgba(2, 44, 34, 0.95), rgba(6, 95, 70, 0.8));
+
+  /* Completed Status */
+  --done-base: #8b5cf6;
+  --done-dark: #2e1065;
+  --done-border: rgba(139, 92, 246, 0.3);
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
+  --shadow-p1: 0 0 30px rgba(239, 68, 68, 0.3), inset 0 0 20px rgba(239, 68, 68, 0.1);
+  --shadow-p2: 0 0 25px rgba(245, 158, 11, 0.25);
+
+  /* Safe Area insets for iPhone 15 (Dynamic Island & Home bar) & Android */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for iOS 15+ and Android */
+  line-height: 1.5;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -webkit-overflow-scrolling: touch;
+}
+
+button, input, textarea, select {
+  touch-action: manipulation; /* Eliminates 300ms tap delay on mobile devices */
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Atmospheric Glow Background */
+.app-background {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.aurora-mesh {
+  position: absolute;
+  filter: blur(120px);
+  border-radius: 50%;
+  opacity: 0.45;
+  animation: floatAurora 18s ease-in-out infinite alternate;
+}
+
+.aurora-1 {
+  width: 600px;
+  height: 600px;
+  top: -150px;
+  left: -100px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, transparent 70%);
+}
+
+.aurora-2 {
+  width: 550px;
+  height: 550px;
+  bottom: -150px;
+  right: -100px;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.3) 0%, transparent 70%);
+  animation-duration: 22s;
+  animation-direction: alternate-reverse;
+}
+
+.aurora-3 {
+  width: 400px;
+  height: 400px;
+  top: 40%;
+  left: 40%;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.25) 0%, transparent 70%);
+  animation-duration: 15s;
+}
+
+@keyframes floatAurora {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, -60px) scale(1.1); }
+  100% { transform: translate(-30px, 40px) scale(0.95); }
+}
+
+/* Card Animations */
+@keyframes p1Pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.3), inset 0 0 15px rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(239, 68, 68, 0.6), inset 0 0 25px rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.8);
+  }
+}
+
+@keyframes p2Pulse {
+  0%, 100% {
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(245, 158, 11, 0.4);
+  }
+}
+
+@keyframes mascotRage {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(-4deg) scale(1.05); }
+  75% { transform: rotate(4deg) scale(1.05); }
+}
+
+@keyframes springPop {
+  0% { transform: scale(0.92); opacity: 0; }
+  70% { transform: scale(1.02); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}

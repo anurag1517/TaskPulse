@@ -1,0 +1,506 @@
+.dashboard-container {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Application Layout: Sidebar + Workspace */
+.dashboard-app-layout {
+    display: flex;
+    flex: 1;
+    width: 100%;
+    min-height: calc(100vh - 64px);
+    position: relative;
+}
+
+.dashboard-workspace {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-main-content {
+    max-width: 1280px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 24px 24px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Floating Side Quick-Tab on Phone & Tablet Screens (<1024px) */
+.mobile-side-edge-trigger {
+    display: none;
+    position: fixed;
+    top: 42%;
+    left: 0;
+    transform: translateY(-50%);
+    z-index: 95;
+    background: rgba(14, 20, 34, 0.88);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-glass);
+    border-left: none;
+    border-radius: 0 12px 12px 0;
+    padding: 8px 6px 8px 4px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    box-shadow: 4px 0 18px rgba(0, 0, 0, 0.5);
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.mobile-side-edge-trigger:active {
+    transform: translateY(-50%) scale(0.92);
+    background: rgba(99, 102, 241, 0.25);
+}
+
+.edge-trigger-icon {
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.edge-trigger-text {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.edge-trigger-badge {
+    background: var(--p1-base);
+    color: #ffffff;
+    font-size: 0.62rem;
+    font-weight: 800;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
+/* Push Status Toast */
+.push-status-toast {
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid var(--p4-border);
+    color: #a7f3d0;
+    padding: 12px 18px;
+    border-radius: 12px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    animation: springPop 0.3s ease;
+}
+
+/* High-Urgency Floating In-App Toast HUD */
+.in-app-urgent-toast {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: linear-gradient(135deg, rgba(69, 10, 10, 0.96), rgba(185, 28, 28, 0.9));
+    border: 2px solid var(--p1-base);
+    box-shadow: 0 12px 35px rgba(239, 68, 68, 0.5), 0 0 20px rgba(239, 68, 68, 0.3);
+    padding: 14px 18px;
+    border-radius: 16px;
+    color: #ffffff;
+    animation: springPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.toast-left-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.toast-flame-icon {
+    font-size: 1.8rem;
+    animation: flicker 1s infinite alternate;
+}
+
+.toast-content-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.toast-title {
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.toast-body {
+    font-size: 0.82rem;
+    color: #fecaca;
+}
+
+.toast-dismiss-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+/* Threat Alert Banner */
+.threat-alert-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: var(--p1-gradient);
+    border: 1px solid var(--p1-border);
+    border-radius: 16px;
+    padding: 16px 20px;
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.35);
+    animation: p1Pulse 2.5s infinite alternate;
+}
+
+.threat-flame-icon {
+    font-size: 1.8rem;
+}
+
+.threat-banner-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.threat-banner-text strong {
+    font-size: 0.95rem;
+    color: #ffffff;
+}
+
+.threat-banner-text p {
+    font-size: 0.8rem;
+    color: var(--p1-light);
+}
+
+/* Metrics Row */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+}
+
+.metric-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    border-radius: 16px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    backdrop-filter: blur(14px);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    background: var(--bg-card-hover);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.metric-icon {
+    font-size: 1.8rem;
+}
+
+.metric-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.metric-value {
+    font-family: var(--font-heading);
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+
+.metric-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.metric-p1:hover {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.35);
+    border-color: var(--p1-base);
+}
+
+.metric-p2:hover {
+    box-shadow: 0 0 18px rgba(245, 158, 11, 0.3);
+    border-color: var(--p2-base);
+}
+
+.metric-done:hover {
+    box-shadow: 0 0 16px rgba(139, 92, 246, 0.3);
+    border-color: var(--done-base);
+}
+
+/* Tasks Grid */
+.tasks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+}
+
+/* Empty State */
+.empty-tasks-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 70px 20px;
+    gap: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    border-radius: 20px;
+    box-shadow: var(--shadow-sm);
+}
+
+.empty-tasks-emoji {
+    font-size: 3rem;
+    margin-bottom: 4px;
+}
+
+.empty-tasks-view h3 {
+    font-size: 1.25rem;
+    color: var(--text-primary);
+}
+
+.empty-tasks-view p {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    max-width: 440px;
+    margin-bottom: 8px;
+}
+
+.dashboard-loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 80px 0;
+    color: var(--text-secondary);
+}
+
+/* Floating Mobile Bottom Navigation Dock (iPhone 15, Android) */
+.mobile-bottom-dock {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 99;
+    background: rgba(10, 15, 26, 0.92);
+    backdrop-filter: blur(24px);
+    border-top: 1px solid var(--border-glass);
+    padding: 8px 16px max(10px, env(safe-area-inset-bottom));
+    align-items: center;
+    justify-content: space-around;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.6);
+}
+
+.dock-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font-heading);
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    position: relative;
+    padding: 6px 12px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    min-width: 56px;
+    min-height: 48px; /* Apple HIG 44px+ standard */
+}
+
+.dock-tab:active {
+    transform: scale(0.92);
+}
+
+.dock-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+}
+
+.dock-active {
+    color: #ffffff;
+}
+
+.dock-active .dock-icon {
+    filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.6));
+}
+
+.dock-badge {
+    position: absolute;
+    top: 4px;
+    right: 10px;
+    background: var(--p1-base);
+    color: #ffffff;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 1px 5px;
+    border-radius: 999px;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+}
+
+/* Center Glowing FAB */
+.dock-fab-wrapper {
+    position: relative;
+    top: -14px;
+}
+
+.dock-fab-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+    border: 3px solid var(--bg-deep);
+    color: #ffffff;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: p1Pulse 2.5s infinite;
+}
+
+.dock-fab-btn:active {
+    transform: scale(0.9);
+}
+
+/* iPhone 15 & Mobile Responsiveness (360px - 768px) */
+@media (max-width: 768px) {
+    .mobile-bottom-dock {
+        display: flex;
+        padding: 8px 14px max(14px, env(safe-area-inset-bottom));
+    }
+
+    .dashboard-main-content {
+        padding: 14px 14px calc(96px + env(safe-area-inset-bottom));
+        gap: 16px;
+    }
+
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .metric-card {
+        padding: 12px 14px;
+        border-radius: 14px;
+    }
+
+    .metric-icon {
+        font-size: 1.4rem;
+    }
+
+    .metric-value {
+        font-size: 1.35rem;
+    }
+
+    .threat-alert-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 14px 16px;
+        gap: 12px;
+    }
+
+    .threat-alert-banner button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .tasks-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
+/* iPhone 15 (393px width) & Compact Android Screens (360px - 412px) */
+@media (max-width: 430px) {
+    .dashboard-main-content {
+        padding: 12px 12px calc(96px + env(safe-area-inset-bottom));
+        gap: 14px;
+    }
+
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .metric-card {
+        padding: 10px 12px;
+        border-radius: 12px;
+        gap: 10px;
+    }
+
+    .metric-icon {
+        font-size: 1.25rem;
+    }
+
+    .metric-value {
+        font-size: 1.25rem;
+    }
+
+    .metric-label {
+        font-size: 0.72rem;
+    }
+
+    .dock-tab {
+        min-width: 48px;
+        padding: 4px 6px;
+    }
+
+    .dock-icon {
+        font-size: 1.2rem;
+    }
+
+    .dock-label {
+        font-size: 0.68rem;
+    }
+
+    .dock-fab-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 1.25rem;
+    }
+
+    .empty-tasks-view {
+        padding: 40px 16px;
+    }
+}

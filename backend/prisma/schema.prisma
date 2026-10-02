@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String?
+  email     String    @unique
+  password  String    @map("pw")
+  
+  // Relations
+  tasks     Task[]
+  logs      Log[]
+  pushSubs  PushSub[]
+
+  @@map("users")
+}
+
+model Task {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  topic     String   @db.VarChar(80)
+  time      DateTime @db.Timestamptz
+  loc       String?  @default("") @db.VarChar(80)
+  remarks   String?  @default("") @db.VarChar(400)
+  pri       Int      @default(3)
+  done      Boolean  @default(false)
+  assigner  String?  @default("") @db.VarChar(60)
+  lastRem   BigInt   @default(0) @map("last_rem")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "idx_tasks_user")
+  @@map("tasks")
+}
+
+model Log {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  ts        BigInt
+  icon      String?
+  msg       String?
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, ts], map: "idx_logs_user")
+  @@map("logs")
+}
+
+model PushSub {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("push_subs")
+}

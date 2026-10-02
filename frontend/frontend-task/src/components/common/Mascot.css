@@ -1,0 +1,90 @@
+.mascot-container {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    user-select: none;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.mascot-face {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--bg-surface);
+    border: 2px solid var(--border-glass);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    position: relative;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Mood specific styles & animations */
+.mascot-raging .mascot-face {
+    background: radial-gradient(circle, #7f1d1d 0%, #450a0a 100%);
+    border-color: var(--p1-base);
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.6), inset 0 0 15px rgba(239, 68, 68, 0.4);
+    animation: mascotRage 0.6s ease-in-out infinite alternate;
+}
+
+.fire-aura {
+    position: absolute;
+    top: -14px;
+    right: -10px;
+    font-size: 22px;
+    animation: flicker 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes flicker {
+    0% { transform: scale(1) translateY(0); opacity: 0.85; }
+    100% { transform: scale(1.2) translateY(-4px); opacity: 1; }
+}
+
+.mascot-stressed .mascot-face {
+    background: radial-gradient(circle, #78350f 0%, #451a03 100%);
+    border-color: var(--p2-base);
+    box-shadow: 0 0 25px rgba(245, 158, 11, 0.5);
+    animation: jitter 0.2s linear infinite;
+}
+
+@keyframes jitter {
+    0% { transform: translate(0, 0); }
+    25% { transform: translate(-1.5px, 1.5px); }
+    50% { transform: translate(1.5px, -1.5px); }
+    75% { transform: translate(-1.5px, -1px); }
+    100% { transform: translate(0, 0); }
+}
+
+.mascot-peek .mascot-face {
+    border-color: var(--primary);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+    transform: scale(0.96);
+}
+
+.mascot-typing .mascot-face {
+    border-color: var(--p3-base);
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.35);
+    transform: rotate(6deg);
+}
+
+.mascot-celebrate .mascot-face {
+    background: radial-gradient(circle, #064e3b 0%, #022c22 100%);
+    border-color: var(--p4-base);
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.45);
+    animation: floatZen 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes floatZen {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-8px); }
+}
+
+.mascot-idle .mascot-face {
+    animation: gentleBreathe 3s ease-in-out infinite alternate;
+}
+
+@keyframes gentleBreathe {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.03); }
+}

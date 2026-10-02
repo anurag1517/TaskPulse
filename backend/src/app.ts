@@ -20,12 +20,13 @@ export function createApp() {
 
     app.use(express.json());
     app.use(cookieParser());
-    const corsOrigin = env.corsOrigin.includes(',')
+    const rawOrigins = (env.corsOrigin || "http://localhost:5173").includes(',')
         ? env.corsOrigin.split(',').map((origin) => origin.trim())
-        : env.corsOrigin;
+        : [env.corsOrigin ? env.corsOrigin.trim() : "http://localhost:5173"];
+    const sanitizedOrigins = rawOrigins.map((origin) => origin.replace(/\/+$/, ''));
 
     app.use(cors({
-        origin: corsOrigin,
+        origin: sanitizedOrigins.length === 1 ? sanitizedOrigins[0] : sanitizedOrigins,
         credentials: true,
     }));
     app.use(express.urlencoded({

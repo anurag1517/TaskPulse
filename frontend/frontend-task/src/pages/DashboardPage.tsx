@@ -36,7 +36,7 @@ export function DashboardPage() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [pushEnabled, setPushEnabled] = useState(false);
     const [pushStatusMessage, setPushStatusMessage] = useState<string | null>(null);
-    const [urgentAlertToast, setUrgentAlertToast] = useState<{ title: string; body: string } | null>(null);
+    const [urgentAlertToast, setUrgentAlertToast] = useState<{ title: string; body?: string } | null>(null);
 
     const loadTasks = async () => {
         setLoading(true);
@@ -108,13 +108,16 @@ export function DashboardPage() {
         }
     };
 
-    const dispatchNativeNotification = useCallback((title: string, body: string) => {
+    const dispatchNativeNotification = useCallback((title: string, body?: string) => {
         try {
-            const n = new Notification(title, {
-                body,
+            const options: NotificationOptions = {
                 icon: '/icon-192.png',
                 tag: 'taskpulse-' + Date.now(),
-            });
+            };
+            if (body) {
+                options.body = body;
+            }
+            const n = new Notification(title, options);
             n.onclick = () => {
                 window.focus();
                 n.close();
@@ -122,17 +125,20 @@ export function DashboardPage() {
         } catch {
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.ready.then((reg) => {
-                    reg.showNotification(title, {
-                        body,
+                    const options: NotificationOptions = {
                         icon: '/icon-192.png',
                         tag: 'taskpulse-' + Date.now(),
-                    });
+                    };
+                    if (body) {
+                        options.body = body;
+                    }
+                    reg.showNotification(title, options);
                 }).catch((err) => console.error('SW notification error:', err));
             }
         }
     }, []);
 
-    const showDesktopNotification = useCallback((title: string, body: string) => {
+    const showDesktopNotification = useCallback((title: string, body?: string) => {
         // 1. Play high-tech radar alert chime through laptop speakers
         playUrgentAlertChime();
 
@@ -236,10 +242,7 @@ export function DashboardPage() {
                 setTimeout(() => setPushStatusMessage(null), 5000);
 
                 // Immediately fire a tactile test notification to the laptop screen
-                showDesktopNotification(
-                    '🔥 TaskPulse Notifications Active!',
-                    'Your device will now receive real-time alerts for critical P1 tasks.'
-                );
+                showDesktopNotification('🔥 TaskPulse Notifications Active!');
 
                 // Register ServiceWorker PushSubscription with backend
                 try {
@@ -323,7 +326,7 @@ export function DashboardPage() {
                                     <span className="toast-flame-icon">🔥</span>
                                     <div className="toast-content-text">
                                         <span className="toast-title">{urgentAlertToast.title}</span>
-                                        <span className="toast-body">{urgentAlertToast.body}</span>
+                                        {urgentAlertToast.body && <span className="toast-body">{urgentAlertToast.body}</span>}
                                     </div>
                                 </div>
                                 <button

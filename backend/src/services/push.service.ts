@@ -1,6 +1,21 @@
 import { prisma } from "../lib/prisma";
 import { AppError } from "../error/appError";
 import { env } from "../config/env";
+import webpush from "web-push";
+
+// Initialize VAPID if keys are available
+if (env.vapidPublicKey && env.vapidPrivateKey) {
+    try {
+        webpush.setVapidDetails(
+            env.vapidSubject || "mailto:admin@taskpulse.com",
+            env.vapidPublicKey,
+            env.vapidPrivateKey
+        );
+        console.log("[PushService] VAPID details configured successfully.");
+    } catch (vapidErr) {
+        console.error("[PushService] Error configuring VAPID details:", vapidErr);
+    }
+}
 
 class PushService {
     async subscribe(userId: number, endpoint: string, p256dh: string, auth: string) {
@@ -19,6 +34,7 @@ class PushService {
             },
         });
 
+        console.log(`[PushService] Registered new push subscription for User ${userId}`);
         return sub;
     }
 
@@ -44,27 +60,16 @@ class PushService {
         payload: { title: string; body: string; icon?: string; data?: any }
     ) {
         const subs = await this.getSubscriptions(userId);
-        if (!subs || subs.length === 0) return;
-
-        let webpush: any = null;
-        try {
-            webpush = require("web-push");
-            if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-                webpush.setVapidDetails(
-                    process.env.VAPID_SUBJECT || "mailto:admin@taskpulse.com",
-                    process.env.VAPID_PUBLIC_KEY,
-                    process.env.VAPID_PRIVATE_KEY
-                );
-            }
-        } catch {
-            // web-push not yet installed or VAPID keys not configured
+        if (!subs || subs.length === 0) {
+            console.log(`[PushService] User ${userId} has 0 registered push subscriptions. User must click 'Enable Notifications' in browser.`);
+            return;
         }
 
         const notificationPayload = JSON.stringify(payload);
 
         for (const sub of subs) {
             try {
-                if (webpush && process.env.VAPID_PUBLIC_KEY) {
+                if (env.vapidPublicKey && env.vapidPrivateKey) {
                     await webpush.sendNotification(
                         {
                             endpoint: sub.endpoint,
@@ -75,10 +80,12 @@ class PushService {
                         },
                         notificationPayload
                     );
+                    console.log(`[PushService] Successfully dispatched Web Push to User ${userId} (${sub.endpoint.slice(0, 35)}...)`);
                 } else {
                     console.log(`[Push Notification simulated for User ${userId}]:`, payload.title, payload.body);
                 }
             } catch (err: any) {
+                console.error(`[PushService] Failed sending to endpoint for User ${userId}:`, err?.message || err);
                 // If subscription expired / 410 Gone, remove from database
                 if (err?.statusCode === 410 || err?.statusCode === 404) {
                     await prisma.pushSub.delete({ where: { endpoint: sub.endpoint } }).catch(() => {});

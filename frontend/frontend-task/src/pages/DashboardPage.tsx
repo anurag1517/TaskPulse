@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { taskApi } from '../api/task.api';
 import { pushApi } from '../api/push.api';
 import type { Task, PriorityLevel, CreateTaskDTO, UpdateTaskDTO } from '../types';
@@ -157,6 +157,38 @@ export function DashboardPage() {
             setTimeout(() => setPushStatusMessage(null), 7000);
         }
     }, [dispatchNativeNotification]);
+
+    // Live Ticker: Alert user whenever any task is ending soon (within 15 mins) or deadline arrived
+    const alertedDeadlinesRef = useRef<Set<string>>(new Set());
+
+    useEffect(() => {
+        const checkUpcomingDeadlines = () => {
+            const now = Date.now();
+            tasks.forEach((t) => {
+                if (t.done) return;
+                const dueMs = new Date(t.time).getTime();
+                const diffMins = Math.round((dueMs - now) / 60000);
+
+                // Alert if ending within 15 minutes, or overdue by up to 10 minutes
+                if (diffMins <= 15 && diffMins >= -10) {
+                    const alertKey = `${t.id}-${diffMins <= 0 ? 'overdue' : 'approaching'}`;
+                    if (!alertedDeadlinesRef.current.has(alertKey)) {
+                        alertedDeadlinesRef.current.add(alertKey);
+                        showDesktopNotification(
+                            diffMins > 0 ? `⏰ Task Ending Soon: "${t.topic}"` : `🚨 Task Deadline Reached: "${t.topic}"`,
+                            diffMins > 0
+                                ? `Due in ${diffMins} minutes! Scheduled for ${new Date(t.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                                : `This task was due at ${new Date(t.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}!`
+                        );
+                    }
+                }
+            });
+        };
+
+        checkUpcomingDeadlines();
+        const interval = setInterval(checkUpcomingDeadlines, 20000);
+        return () => clearInterval(interval);
+    }, [tasks, showDesktopNotification]);
 
     const handleCreateOrUpdateTask = async (data: CreateTaskDTO | UpdateTaskDTO) => {
         if (editingTask) {

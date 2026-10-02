@@ -9,15 +9,13 @@ class ReminderService {
     async checkAndSendReminders(): Promise<void> {
         const now = Date.now();
         const oneHourAgo = BigInt(now - this.ONE_HOUR_MS);
+        const tenMinsAgo = BigInt(now - 10 * 60 * 1000);
 
         try {
-            // Find all pending tasks where last reminder was sent more than an hour ago (or never)
+            // Find all pending tasks
             const pendingTasks = await prisma.task.findMany({
                 where: {
                     done: false,
-                    lastRem: {
-                        lte: oneHourAgo,
-                    },
                 },
                 include: {
                     user: {
@@ -27,11 +25,38 @@ class ReminderService {
             });
 
             for (const task of pendingTasks) {
-                // Priority-tailored reminder copy
+                const taskTimeMs = new Date(task.time).getTime();
+                const diffMinutes = Math.round((taskTimeMs - now) / (60 * 1000));
+                const lastRemMs = Number(task.lastRem);
+
+                // Case 1: Deadline is ending soon (within 15 minutes) or overdue within the last 30 minutes
+                const isEndingSoon = diffMinutes <= 15 && diffMinutes >= -30;
+                const recentDeadlineAlertSent = lastRemMs > Number(tenMinsAgo);
+
+                // Case 2: Standard hourly reminder cycle for pending tasks
+                const isHourlyCycleDue = lastRemMs === 0 || BigInt(lastRemMs) <= oneHourAgo;
+
+                if (!isEndingSoon && !isHourlyCycleDue) {
+                    continue;
+                }
+
+                if (isEndingSoon && recentDeadlineAlertSent) {
+                    continue;
+                }
+
+                // Determine copy based on whether task is ending soon or routine hourly escalation
                 let urgencyTitle = `📌 Task Reminder: ${task.topic}`;
                 let icon = "🔔";
 
-                if (task.pri === 1) {
+                if (isEndingSoon) {
+                    if (diffMinutes > 0) {
+                        urgencyTitle = `⏰ ENDING SOON: "${task.topic}" is due in ${diffMinutes}m!`;
+                        icon = "⏳";
+                    } else {
+                        urgencyTitle = `🚨 DEADLINE PASSED: "${task.topic}" is overdue!`;
+                        icon = "🔥";
+                    }
+                } else if (task.pri === 1) {
                     urgencyTitle = `🚨 URGENT P1 TASK: ${task.topic}!`;
                     icon = "🔥";
                 } else if (task.pri === 2) {
@@ -40,8 +65,10 @@ class ReminderService {
                 }
 
                 const body = task.loc
-                    ? `Pending at ${task.loc}. Time: ${new Date(task.time).toLocaleTimeString()}`
-                    : `This task is pending completion. Please take action!`;
+                    ? `Location: ${task.loc}. Scheduled: ${new Date(task.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                    : `Scheduled for: ${new Date(task.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
+                console.log(`[ReminderService] Triggering alert for task "${task.topic}" [P${task.pri}] (due: ${diffMinutes}m)`);
 
                 // Dispatch push notification
                 await pushService.sendPushToUser(task.userId, {
@@ -66,7 +93,7 @@ class ReminderService {
                 // Log the reminder event in daily activity log
                 await logService.addLog(
                     task.userId,
-                    `Sent hourly reminder for P${task.pri} task: "${task.topic}"`,
+                    `${urgencyTitle}: Scheduled for ${new Date(task.time).toLocaleTimeString()}`,
                     icon
                 );
             }

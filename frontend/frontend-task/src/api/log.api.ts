@@ -1,11 +1,16 @@
 import { apiClient } from './client';
-import type { TaskLog } from '../types';
+import type { DayWiseLogResponse } from '../types';
 
 export const logApi = {
-    async getLogs(limit: number = 100): Promise<{ success: boolean; count: number; data: TaskLog[] }> {
-        return apiClient<{ success: boolean; count: number; data: TaskLog[] }>('/logs', {
+    async getLogs(page: number = 1, limit: number = 5): Promise<DayWiseLogResponse> {
+        const tzOffset = new Date().getTimezoneOffset();
+        return apiClient<DayWiseLogResponse>('/logs', {
             method: 'GET',
-            params: { limit },
+            params: {
+                page,
+                limit,
+                tzOffset,
+            },
         });
     },
 

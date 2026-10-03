@@ -6,14 +6,17 @@ class LogController {
     getLogs = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const userId = req.user!.id;
-            const limit = req.query.limit ? Number(req.query.limit) : 100;
+            const page = req.query.page ? Math.max(1, parseInt(req.query.page as string, 10)) : 1;
+            const limit = req.query.limit ? Math.max(1, parseInt(req.query.limit as string, 10)) : 5;
+            const tzOffset = req.query.tzOffset ? parseInt(req.query.tzOffset as string, 10) : 0;
 
-            const logs = await logService.getLogs(userId, limit);
+            const result = await logService.getDayWiseLogs(userId, page, limit, tzOffset);
 
             res.status(200).json({
                 success: true,
-                count: logs.length,
-                data: logs,
+                pagination: result.pagination,
+                data: result.data,
+                stats: result.stats,
             });
         } catch (error) {
             next(error);

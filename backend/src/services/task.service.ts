@@ -1,7 +1,6 @@
 import { prisma } from "../lib/prisma";
 import { AppError } from "../error/appError";
 import { CreateTaskInput, UpdateTaskInput } from "../payloadSchema/task.schema";
-import { logService } from "./log.service";
 
 class TaskService {
     async createTask(userId: number, data: CreateTaskInput) {
@@ -18,13 +17,6 @@ class TaskService {
                 lastRem: BigInt(0),
             },
         });
-
-        // Automatically record daily task log
-        await logService.addLog(
-            userId,
-            `Created task: "${task.topic}" [P${task.pri}]`,
-            "📋"
-        );
 
         return {
             ...task,
@@ -107,22 +99,6 @@ class TaskService {
             },
         });
 
-        if (data.done !== undefined && data.done !== existingTask.done) {
-            const icon = data.done ? "✅" : "⏳";
-            const statusText = data.done ? "Completed" : "Reopened";
-            await logService.addLog(
-                userId,
-                `${statusText} task: "${updatedTask.topic}"`,
-                icon
-            );
-        } else {
-            await logService.addLog(
-                userId,
-                `Updated task: "${updatedTask.topic}"`,
-                "✏️"
-            );
-        }
-
         return {
             ...updatedTask,
             lastRem: Number(updatedTask.lastRem),
@@ -145,14 +121,6 @@ class TaskService {
             data: { done: newDone },
         });
 
-        await logService.addLog(
-            userId,
-            newDone
-                ? `Completed task: "${updatedTask.topic}"`
-                : `Marked task incomplete: "${updatedTask.topic}"`,
-            newDone ? "✅" : "⏳"
-        );
-
         return {
             ...updatedTask,
             lastRem: Number(updatedTask.lastRem),
@@ -171,12 +139,6 @@ class TaskService {
         await prisma.task.delete({
             where: { id: taskId },
         });
-
-        await logService.addLog(
-            userId,
-            `Deleted task: "${existingTask.topic}"`,
-            "🗑️"
-        );
 
         return { message: "Task deleted successfully" };
     }

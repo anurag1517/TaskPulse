@@ -1,6 +1,5 @@
 import { prisma } from "../lib/prisma";
 import { pushService } from "./push.service";
-import { logService } from "./log.service";
 
 class ReminderService {
     private intervalId: NodeJS.Timeout | null = null;
@@ -89,13 +88,6 @@ class ReminderService {
                         lastRem: BigInt(now),
                     },
                 });
-
-                // Log the reminder event in daily activity log
-                await logService.addLog(
-                    task.userId,
-                    `${urgencyTitle}: Scheduled for ${new Date(task.time).toLocaleTimeString()}`,
-                    icon
-                );
             }
         } catch (error) {
             console.error("[ReminderService] Error checking task reminders:", error);

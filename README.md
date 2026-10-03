@@ -1,19 +1,16 @@
 # TaskPulse 😤
 
-A full-stack task manager that nags you until the work is done. Priority-based animated UI, hourly reminders until completion, web push notifications, and a per-user activity log. Built to run entirely on free tiers.
-
-> **P1** tasks get an angry face and a pulsing red glow. **P4** tasks get a calm smile. Finish a task and the face turns into a 🎉.
+A full-stack task manager with priority-based nudging, reminder logic, push notifications, and an activity log. The app is split into a Prisma-backed Express API and a Vite + React frontend.
 
 ## Features
 
-- **Auth:** signup and login with hashed passwords (bcrypt) and JWT sessions
-- **Tasks:** topic, time, location, remarks, priority (P1–P4), completion status and assigner
-- **Priority theming:** color scheme and animated faces per priority, responsive on phone, tablet and desktop
-- **Hourly reminders:** once a task is past due and not done, it is re-sent every hour until completed
-- **Web push notifications:** reminders reach the device even when the tab is closed (installable PWA)
-- **Optional email reminders:** via Brevo's free HTTPS API
-- **Activity log:** a per-user history of signups, logins, task changes and reminders
-- **Security basics:** input validation (zod), rate limiting, Helmet headers, parameterized SQL
+- Auth with password hashing and JWT-based session checks
+- Task creation, updates, deletion, and completion toggling
+- Priority-based task styling and urgency messaging
+- Background reminder checks for overdue or soon-due tasks
+- Web push subscriptions with VAPID keys
+- Per-user activity log
+- Rate limiting, Helmet headers, and input validation
 
 ## Tech stack
 
@@ -21,158 +18,157 @@ A full-stack task manager that nags you until the work is done. Priority-based a
 |---|---|
 | Frontend | React, TypeScript, Vite |
 | Backend | Node.js, Express, TypeScript |
-| Database | PostgreSQL (plain `pg`, no ORM) |
+| Database | PostgreSQL via Prisma |
 | Validation | zod |
-| Push | `web-push` (VAPID), service worker |
-| Hosting (free) | Vercel (frontend), Render (API), Supabase (Postgres) |
-| Scheduling (free) | cron-job.org |
+| Push | `web-push` |
 
 ## Architecture
 
-Requests flow through clear layers, and each layer only talks to the one below it:
+The app follows a simple layered flow:
 
+```text
+Request → Route → Middleware → Controller → Service → Prisma/Database
 ```
-Request → Router → Middleware (rate limit, JWT check, validation)
-        → Controller → Service → Repository → PostgreSQL
-```
 
-- **Routes** map URLs to controllers and attach middleware
-- **Middleware** handles JWT auth, validation, rate limiting and errors
-- **Controllers** read the request and send the response, with no business logic
-- **Services** hold the business rules (task logic, reminders, push, email)
-- **Repositories** are the only place SQL lives
+- `backend/src/routes` defines the API endpoints
+- `backend/src/middleware` handles auth, validation, rate limiting, and errors
+- `backend/src/controllers` are thin request/response handlers
+- `backend/src/services` contains task and reminder logic
+- `backend/prisma/schema.prisma` defines the Postgres schema
 
-No ORM is needed: the schema is small, and a repository layer keeps queries in one place. If the schema grows a lot, Drizzle or Kysely can be added later without touching controllers or services.
+## Repository structure
 
-## Folder structure
-
-```
-taskpulse-app/
+```text
+TaskPulse/
+├── .gitignore
 ├── README.md
-├── render.yaml                  Render blueprint (free plan)
 ├── backend/
 │   ├── package.json
-│   ├── tsconfig.json
-│   ├── .env.example
-│   └── src/
-│       ├── server.ts            boot: migrate DB, start scheduler, listen
-│       ├── app.ts               express app: middleware, routes, error handling
-│       ├── config/              env loading and validation
-│       ├── db/                  pg pool, schema/migrations
-│       ├── routes/              auth, tasks, logs, push, cron
-│       ├── middleware/          auth (JWT), cronAuth, validate, rateLimiter, errorHandler
-│       ├── controllers/         thin request/response handlers
-│       ├── services/            auth, task, log, push, mail, reminder
-│       ├── repositories/        user, task, log, pushSub (all SQL)
-│       ├── schemas/             zod request schemas
-│       ├── types/               shared TypeScript types
-│       └── utils/               HttpError, asyncHandler, priority helpers
+│   ├── prisma/
+│   │   └── schema.prisma
+│   ├── src/
+│   │   ├── app.ts
+│   │   ├── server.ts
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── middleware/
+│   │   ├── payloadSchema/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   └── types/
+│   └── tsconfig.json
 └── frontend/
-    ├── package.json
-    ├── vite.config.ts
-    ├── vercel.json              proxies /api/* to the Render API
-    ├── index.html
-    ├── public/                  sw.js (push), manifest.json, icons
-    └── src/
-        ├── main.tsx
-        ├── App.tsx
-        ├── api/                 fetch client and per-resource API modules
-        ├── context/             AuthContext
-        ├── hooks/               useTasks, usePush, useToasts
-        ├── components/          TaskCard, TaskList, TaskForm, ActivityLog, Toasts...
-        ├── pages/               AuthPage, Dashboard
-        ├── types/
-        └── styles.css
+    └── frontend-task/
+        ├── package.json
+        ├── vite.config.ts
+        ├── public/
+        ├── src/
+        │   ├── api/
+        │   ├── assets/
+        │   ├── components/
+        │   ├── context/
+        │   ├── hooks/
+        │   ├── pages/
+        │   ├── types/
+        │   ├── utils/
+        │   ├── App.tsx
+        │   ├── main.tsx
+        │   └── index.css
+        └── tsconfig.*
 ```
 
-## Getting started (local)
+## Getting started
 
-**Requirements:** Node 18+ and a PostgreSQL database (a free Supabase project works).
+### 1) Backend
 
 ```bash
-# 1. backend
 cd backend
-cp .env.example .env        # fill in DATABASE_URL, JWT_SECRET, ...
 npm install
-npm run keys                # generates VAPID keys; paste them into .env
-npm run dev                 # http://localhost:3000
-
-# 2. frontend (new terminal)
-cd frontend
-npm install
-npm run dev                 # http://localhost:5173 (proxies /api to :3000)
+cp .env.example .env   # if you add your own env file locally
+npm run dev
 ```
 
-Tables are created automatically when the backend starts.
+The backend runs on `http://localhost:5011` by default.
 
-## Environment variables (backend)
+### 2) Frontend
+
+```bash
+cd frontend/frontend-task
+npm install
+npm run dev
+```
+
+The frontend runs on `http://localhost:5173` by default.
+
+## Environment variables
+
+Create a `.env` file in `backend/` with the values your app needs:
 
 | Variable | Required | Description |
 |---|---|---|
-| `DATABASE_URL` | yes | Postgres connection string (Supabase: use the **Session pooler** string) |
-| `JWT_SECRET` | yes | Long random string used to sign tokens |
-| `CRON_SECRET` | yes (prod) | Bearer secret that cron-job.org sends to `/api/cron/remind` |
-| `NODE_ENV` | prod | Set to `production` on Render |
-| `PORT` | no | Defaults to 3000 |
-| `CORS_ORIGIN` | no | Comma-separated allowed origins (not needed when using the Vercel `/api` rewrite) |
-| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | for push | Generate once with `npm run keys` |
-| `VAPID_SUBJECT` | for push | `mailto:` plus your email, a contact label for push services |
-| `BREVO_API_KEY` / `MAIL_FROM_EMAIL` / `MAIL_FROM_NAME` | no | Enables email reminders |
-
-Never commit `.env` or share the VAPID private key.
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `PORT` | No | Server port, defaults to `5011` |
+| `USER_JWT_SECRET` | Yes | Secret for JWT signing |
+| `USER_COOKIE_NAME` | No | Cookie name used by auth middleware |
+| `EXPIRE_COOKIE_MS` | No | Cookie lifetime in milliseconds |
+| `CORS_ORIGIN` | No | Comma-separated allowed frontend origins |
+| `NODE_ENV` | No | `production` or `development` |
+| `VAPID_PUBLIC_KEY` | For push | Web push public key |
+| `VAPID_PRIVATE_KEY` | For push | Web push private key |
+| `VAPID_SUBJECT` | For push | Usually `mailto:your@email.com` |
+| `CRON_SECRET` | For reminders | Shared secret for external reminder triggers |
+| `LOG_LEVEL` | No | Logging level |
 
 ## API overview
 
-All routes are under `/api`. Authenticated routes need a valid JWT.
+All endpoints are mounted under `/api`.
 
 | Method | Route | Description |
 |---|---|---|
-| POST | `/auth/signup`, `/auth/login` | Create account / log in |
-| POST | `/auth/logout` | Log out (recorded in the activity log) |
-| GET | `/auth/me` | Current user |
-| GET / POST | `/tasks` | List / create tasks |
-| PUT / DELETE | `/tasks/:id` | Update / delete a task |
-| PATCH | `/tasks/:id/done` | Mark done or reopen |
-| GET / DELETE | `/logs` | View / clear the activity log |
-| GET | `/push/key` | VAPID public key |
-| POST | `/push/subscribe`, `/push/unsubscribe` | Register / remove a device |
-| ALL | `/cron/remind` | Sends due reminders (needs `CRON_SECRET`) |
-| GET | `/health` | Health check (outside `/api`) |
+| POST | `/api/auth/signup` | Create a new account |
+| POST | `/api/auth/login` | Log in |
+| GET | `/api/auth/me` | Current authenticated user |
+| POST | `/api/auth/logout` | Log out |
+| GET | `/api/tasks` | List tasks |
+| POST | `/api/tasks` | Create a task |
+| GET | `/api/tasks/:id` | Get a task by ID |
+| PATCH | `/api/tasks/:id` | Update a task |
+| PATCH | `/api/tasks/:id/toggle` | Toggle completion state |
+| DELETE | `/api/tasks/:id` | Delete a task |
+| GET | `/api/logs` | Get activity log |
+| DELETE | `/api/logs` | Clear logs |
+| GET | `/api/push/public-key` | Fetch VAPID public key |
+| POST | `/api/push/subscribe` | Subscribe device for push notifications |
+| POST | `/api/push/unsubscribe` | Remove push subscription |
+| GET | `/api/reminders/health` | Reminder service health check |
+| POST | `/api/reminders/trigger` | Trigger reminder scan (requires `CRON_SECRET`) |
+| GET | `/health` | App health check |
 
-## How reminders work
+## Reminder flow
 
-Render's free plan sleeps when idle, so the server can't rely on its own timer. Instead:
+The reminder service checks pending tasks on a timer and sends notifications when they are due or overdue.
 
-1. **cron-job.org** calls `/api/cron/remind` every 10 minutes with `Authorization: Bearer <CRON_SECRET>`.
-2. The server finds tasks that are **past due, not done and not reminded in the last hour**, claiming them atomically in a single SQL `UPDATE ... RETURNING` so nothing is sent twice.
-3. For each task it writes an activity-log entry, sends a **push** to the owner's devices and, if configured, an **email**.
-4. This repeats hourly until the task is marked done.
+- The backend starts a scheduler from `backend/src/server.ts`
+- `backend/src/services/reminder.service.ts` periodically scans tasks
+- If reminders are triggered externally, the app exposes `POST /api/reminders/trigger`
+- The request must include the shared `CRON_SECRET` via `x-cron-secret` header or `?secret` query param
 
-The 10-minute pings also keep the free Render service awake and stop Supabase from pausing for inactivity.
+## Database
 
-## Deployment (free tier)
+The schema is defined in `backend/prisma/schema.prisma` using Prisma with PostgreSQL.
 
-1. **Supabase:** create a project, then copy the **Session pooler** connection string (with your password) as `DATABASE_URL`.
-2. **GitHub:** push this repo.
-3. **Render:** New → Blueprint, pick the repo (`render.yaml`, free plan; root directory `backend`, build `npm install --include=dev && npm run build`, start `npm start`). Set the env vars above, including `NODE_ENV=production`. Note the `https://….onrender.com` URL.
-4. **Vercel:** import the repo with **Root Directory** `frontend` (Vite preset). First edit `frontend/vercel.json` and replace `YOUR-APP.onrender.com` with your Render host.
-5. **cron-job.org:** create a job for `https://YOUR-APP.onrender.com/api/cron/remind`, every 10 minutes, with the header `Authorization: Bearer <CRON_SECRET>`.
-6. **Use it:** open the Vercel URL, sign up and tap **Enable alerts** on each device. On iPhone, first use Safari → Share → Add to Home Screen and open the app from that icon.
+Available models include:
 
-## Security notes
+- `User`
+- `Task`
+- `Log`
+- `PushSub`
 
-- Passwords are hashed with bcrypt; SQL is fully parameterized; all input is validated with zod.
-- Rate limiting: a burst limiter (20 requests / 10 s), a global limiter (200 / 15 min) and a stricter auth limiter (failed attempts only). `trust proxy` must be enabled behind Render so limits apply per client IP.
-- Helmet adds standard security headers; request bodies are size-limited.
-- Keep the frontend and API on the same site (the Vercel `/api` rewrite) so cookies or tokens avoid cross-site problems.
+## Development notes
 
-## Free-tier caveats
-
-- After a quiet period, the first load can take about a minute while Render wakes up.
-- Reminders arrive within about 10 minutes of the hour, not exactly on it.
-- Brevo's free email cap is 300 per day; push notifications have no such cap.
-- iPhone push only works for the app installed to the Home Screen.
-- The free tiers' limits can change, so check each provider's current pricing page.
+- The frontend is nested under `frontend/frontend-task`, not at the repo root
+- The backend uses Prisma and Express; there is no root-level `render.yaml` in this repository
+- The app is designed for a local development flow with separate frontend and backend processes
 
 ## License
 

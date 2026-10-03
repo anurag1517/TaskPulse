@@ -13,7 +13,7 @@ class AuthController {
             }
             await authService.initiateSignup(req.body);
             res.status(200).json({
-                message: 'If the provided email is eligible, a verification code has been sent.',
+                message: '😎 Registration Successful',
             });
         } catch (error) {
             next(error);

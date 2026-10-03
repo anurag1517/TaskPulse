@@ -12,7 +12,7 @@ export function LogDrawer({ isOpen, onClose }: LogDrawerProps) {
     const [days, setDays] = useState<DayWiseLog[]>([]);
     const [pagination, setPagination] = useState<LogPagination>({
         page: 1,
-        limit: 5,
+        limit: 3,
         totalDays: 0,
         totalPages: 1,
         hasNextPage: false,
@@ -20,14 +20,15 @@ export function LogDrawer({ isOpen, onClose }: LogDrawerProps) {
     });
     const [stats, setStats] = useState<LogStats | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [filterDate, setFilterDate] = useState<string>('');
     const [loading, setLoading] = useState(false);
     // Tab filter for each day card: { [dateKey]: 'all' | 'done' | 'pending' }
     const [dayFilters, setDayFilters] = useState<Record<string, 'all' | 'done' | 'pending'>>({});
 
-    const fetchLogs = async (pageToFetch: number) => {
+    const fetchLogs = async (pageToFetch: number, dateToFilter: string = filterDate) => {
         setLoading(true);
         try {
-            const res = await logApi.getLogs(pageToFetch, 5);
+            const res = await logApi.getLogs(pageToFetch, 3, dateToFilter);
             setDays(res.data);
             setPagination(res.pagination);
             setStats(res.stats);
@@ -41,9 +42,19 @@ export function LogDrawer({ isOpen, onClose }: LogDrawerProps) {
 
     useEffect(() => {
         if (isOpen) {
-            fetchLogs(currentPage);
+            fetchLogs(currentPage, filterDate);
         }
-    }, [isOpen, currentPage]);
+    }, [isOpen, currentPage, filterDate]);
+
+    const handleDateFilterChange = (newDate: string) => {
+        setFilterDate(newDate);
+        setCurrentPage(1);
+    };
+
+    const handleClearDateFilter = () => {
+        setFilterDate('');
+        setCurrentPage(1);
+    };
 
     const handlePrevPage = () => {
         if (pagination.hasPrevPage && !loading) {
@@ -115,10 +126,50 @@ export function LogDrawer({ isOpen, onClose }: LogDrawerProps) {
                     </div>
                 )}
 
+                {/* Server-side Date Filter Bar */}
+                <div className="drawer-filter-bar">
+                    <div className="drawer-date-picker-group">
+                        <label className="drawer-date-label">
+                            <span className="date-icon">📅</span>
+                            <span className="date-text">Filter by Date:</span>
+                            <input
+                                type="date"
+                                className="drawer-date-input"
+                                value={filterDate}
+                                onChange={(e) => handleDateFilterChange(e.target.value)}
+                            />
+                        </label>
+                        {filterDate && (
+                            <button
+                                type="button"
+                                className="drawer-clear-filter-btn"
+                                onClick={handleClearDateFilter}
+                                title="Reset to all days"
+                            >
+                                ✕ Reset to 3 Days
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="drawer-view-mode-hint">
+                        {filterDate ? (
+                            <span className="view-mode-badge filter-active">
+                                🎯 Filtered Date: {filterDate}
+                            </span>
+                        ) : (
+                            <span className="view-mode-badge">
+                                Showing 3 days per view • Page {pagination.page} of {pagination.totalPages}
+                            </span>
+                        )}
+                    </div>
+                </div>
+
                 {/* Server-side Pagination Toolbar */}
                 <div className="drawer-actions-bar">
                     <span className="log-count-tag">
-                        📅 {pagination.totalDays} {pagination.totalDays === 1 ? 'Day' : 'Days'} Recorded
+                        {filterDate
+                            ? `📅 1 Selected Day (${pagination.totalDays} match)`
+                            : `📅 ${pagination.totalDays} ${pagination.totalDays === 1 ? 'Day' : 'Days'} Recorded (3 per page)`}
                     </span>
                     {pagination.totalPages > 1 && (
                         <div className="pagination-controls">
@@ -127,21 +178,21 @@ export function LogDrawer({ isOpen, onClose }: LogDrawerProps) {
                                 className="page-nav-btn"
                                 onClick={handlePrevPage}
                                 disabled={!pagination.hasPrevPage || loading}
-                                title="Previous Days"
+                                title="Previous 3 Days"
                             >
-                                ◀ Prev
+                                ◀ Prev 3 Days
                             </button>
                             <span className="page-indicator">
-                                {pagination.page} / {pagination.totalPages}
+                                Page {pagination.page} / {pagination.totalPages}
                             </span>
                             <button
                                 type="button"
                                 className="page-nav-btn"
                                 onClick={handleNextPage}
                                 disabled={!pagination.hasNextPage || loading}
-                                title="Next Days"
+                                title="Next 3 Days"
                             >
-                                Next ▶
+                                Next 3 Days ▶
                             </button>
                         </div>
                     )}

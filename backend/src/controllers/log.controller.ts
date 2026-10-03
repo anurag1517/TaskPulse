@@ -7,10 +7,11 @@ class LogController {
         try {
             const userId = req.user!.id;
             const page = req.query.page ? Math.max(1, parseInt(req.query.page as string, 10)) : 1;
-            const limit = req.query.limit ? Math.max(1, parseInt(req.query.limit as string, 10)) : 5;
+            const limit = req.query.limit ? Math.max(1, parseInt(req.query.limit as string, 10)) : 3;
             const tzOffset = req.query.tzOffset ? parseInt(req.query.tzOffset as string, 10) : 0;
+            const date = typeof req.query.date === 'string' && req.query.date.trim() ? req.query.date.trim() : undefined;
 
-            const result = await logService.getDayWiseLogs(userId, page, limit, tzOffset);
+            const result = await logService.getDayWiseLogs(userId, page, limit, tzOffset, date);
 
             res.status(200).json({
                 success: true,

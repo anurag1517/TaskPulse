@@ -39,7 +39,13 @@ class LogService {
         return null;
     }
 
-    async getDayWiseLogs(userId: number, page: number = 1, limit: number = 5, tzOffset: number = 0) {
+    async getDayWiseLogs(
+        userId: number,
+        page: number = 1,
+        limit: number = 3,
+        tzOffset: number = 0,
+        targetDate?: string
+    ) {
         const safeLimit = Math.max(1, Math.min(50, limit));
         const safePage = Math.max(1, page);
 
@@ -80,7 +86,14 @@ class LogService {
         }
 
         // Sort days descending (most recent first)
-        const sortedDayKeys = Array.from(dayMap.keys()).sort((a, b) => b.localeCompare(a));
+        let sortedDayKeys = Array.from(dayMap.keys()).sort((a, b) => b.localeCompare(a));
+
+        // If filtering by a specific date, narrow down to that date
+        if (targetDate && targetDate.trim()) {
+            const normalizedDate = targetDate.trim();
+            sortedDayKeys = sortedDayKeys.filter((k) => k === normalizedDate);
+        }
+
         const totalDays = sortedDayKeys.length;
         const totalPages = Math.max(1, Math.ceil(totalDays / safeLimit));
         const currentPage = Math.min(safePage, totalPages);

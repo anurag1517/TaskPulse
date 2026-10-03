@@ -26,13 +26,20 @@ class TaskService {
 
     async getTasks(
         userId: number,
-        filters?: { done?: boolean; pri?: number; search?: string }
+        filters?: {
+            done?: boolean;
+            pri?: number;
+            search?: string;
+            date?: string; // 'YYYY-MM-DD' or 'all'
+            tzOffset?: number; // Timezone offset in minutes (e.g. -330 for IST)
+        }
     ) {
         const whereClause: {
             userId: number;
             done?: boolean;
             pri?: number;
             topic?: { contains: string; mode?: 'insensitive' };
+            time?: { gte: Date; lt: Date };
         } = { userId };
 
         if (filters?.done !== undefined) {
@@ -45,6 +52,33 @@ class TaskService {
 
         if (filters?.search) {
             whereClause.topic = { contains: filters.search, mode: 'insensitive' };
+        }
+
+        // If date is explicitly 'all', skip date filtering.
+        // Otherwise, filter by the specified day (defaulting to today in the user's timezone).
+        if (filters?.date !== 'all') {
+            const tzOffset = filters?.tzOffset !== undefined ? Number(filters.tzOffset) : 0;
+            let targetDateStr = filters?.date;
+
+            if (!targetDateStr) {
+                // Compute today's date string in the user's timezone
+                const now = new Date();
+                const adjustedNow = new Date(now.getTime() - tzOffset * 60 * 1000);
+                targetDateStr = `${adjustedNow.getUTCFullYear()}-${String(adjustedNow.getUTCMonth() + 1).padStart(2, '0')}-${String(adjustedNow.getUTCDate()).padStart(2, '0')}`;
+            }
+
+            const parts = targetDateStr.split('-').map(Number);
+            if (parts.length === 3 && !parts.some(isNaN)) {
+                const [year, month, day] = parts;
+                // startUtc = midnight of that day in UTC shifted by tzOffset
+                const startUtcMs = Date.UTC(year, month - 1, day, 0, 0, 0) + (tzOffset * 60 * 1000);
+                const endUtcMs = startUtcMs + 24 * 60 * 60 * 1000;
+
+                whereClause.time = {
+                    gte: new Date(startUtcMs),
+                    lt: new Date(endUtcMs),
+                };
+            }
         }
 
         const tasks = await prisma.task.findMany({

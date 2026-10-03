@@ -24,10 +24,74 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
     return outputArray;
 }
 
+function getTodayString(): string {
+    const d = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function shiftDateString(dateStr: string, deltaDays: number): string {
+    const parts = dateStr.split('-').map(Number);
+    const d = new Date(parts[0], parts[1] - 1, parts[2] + deltaDays);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function formatDayLabel(dateStr: string): {
+    mainText: string;
+    subText: string;
+    isToday: boolean;
+    isYesterday: boolean;
+    isTomorrow: boolean;
+} {
+    const todayStr = getTodayString();
+
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const yesterdayStr = `${yesterday.getFullYear()}-${pad(yesterday.getMonth() + 1)}-${pad(yesterday.getDate())}`;
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}`;
+
+    const parts = dateStr.split('-').map(Number);
+    const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+
+    const formattedDate = dateObj.toLocaleDateString(undefined, {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+    });
+
+    const isToday = dateStr === todayStr;
+    const isYesterday = dateStr === yesterdayStr;
+    const isTomorrow = dateStr === tomorrowStr;
+
+    let mainText = formattedDate;
+    if (isToday) {
+        mainText = `Today (${formattedDate})`;
+    } else if (isYesterday) {
+        mainText = `Yesterday (${formattedDate})`;
+    } else if (isTomorrow) {
+        mainText = `Tomorrow (${formattedDate})`;
+    }
+
+    return {
+        mainText,
+        subText: isToday ? 'Live Day Active' : isYesterday ? 'Archived in Daily Log' : 'Scheduled Day',
+        isToday,
+        isYesterday,
+        isTomorrow,
+    };
+}
+
 export function DashboardPage() {
     const isMobile = useIsMobile(768);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedDate, setSelectedDate] = useState<string>(getTodayString());
     const [activeFilter, setActiveFilter] = useState<'all' | PriorityLevel | 'done'>('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -38,25 +102,65 @@ export function DashboardPage() {
     const [pushStatusMessage, setPushStatusMessage] = useState<string | null>(null);
     const [urgentAlertToast, setUrgentAlertToast] = useState<{ title: string; body?: string } | null>(null);
 
-    const loadTasks = async () => {
+    const dayInfo = useMemo(() => formatDayLabel(selectedDate), [selectedDate]);
+
+    const loadTasks = useCallback(async (dateToLoad: string = selectedDate) => {
         setLoading(true);
         try {
-            const res = await taskApi.getTasks();
+            const tzOffset = new Date().getTimezoneOffset();
+            const res = await taskApi.getTasks({
+                date: dateToLoad,
+                tzOffset,
+            });
             setTasks(res.data);
         } catch (err) {
             console.error('Failed to load tasks:', err);
         } finally {
             setLoading(false);
         }
-    };
+    }, [selectedDate]);
 
     useEffect(() => {
-        loadTasks();
-        // Check if browser push notification permission is granted
+        loadTasks(selectedDate);
+    }, [selectedDate, loadTasks]);
+
+    // Check if browser push notification permission is granted
+    useEffect(() => {
         if ('Notification' in window && Notification.permission === 'granted') {
             setPushEnabled(true);
         }
     }, []);
+
+    // Midnight rollover check: automatically advance day if midnight strikes while tab is open
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const currentRealToday = getTodayString();
+            setSelectedDate((prevSelected) => {
+                const yesterday = shiftDateString(currentRealToday, -1);
+                if (prevSelected === yesterday) {
+                    return currentRealToday;
+                }
+                return prevSelected;
+            });
+        }, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
+    // Re-sync on visibility change (e.g. user unlocks laptop or returns to tab)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                const currentRealToday = getTodayString();
+                setSelectedDate((prev) => {
+                    const yesterday = shiftDateString(currentRealToday, -1);
+                    return prev === yesterday ? currentRealToday : prev;
+                });
+                loadTasks(selectedDate);
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [selectedDate, loadTasks]);
 
     // Filter and compute statistics
     const counts = useMemo(() => {
@@ -198,13 +302,9 @@ export function DashboardPage() {
 
     const handleCreateOrUpdateTask = async (data: CreateTaskDTO | UpdateTaskDTO) => {
         if (editingTask) {
-            const res = await taskApi.updateTask(editingTask.id, data);
-            setTasks((prev) =>
-                prev.map((t) => (t.id === editingTask.id ? res.data : t))
-            );
+            await taskApi.updateTask(editingTask.id, data);
         } else {
-            const res = await taskApi.createTask(data as CreateTaskDTO);
-            setTasks((prev) => [res.data, ...prev]);
+            await taskApi.createTask(data as CreateTaskDTO);
 
             // If a critical P1 task was just created, alert the laptop screen immediately!
             if (data.pri === 1) {
@@ -214,6 +314,7 @@ export function DashboardPage() {
                 );
             }
         }
+        await loadTasks(selectedDate);
         setEditingTask(null);
     };
 
@@ -222,9 +323,10 @@ export function DashboardPage() {
         setTasks((prev) => prev.filter((t) => t.id !== id));
         try {
             await taskApi.deleteTask(id);
+            await loadTasks(selectedDate);
         } catch (err) {
             console.error('Failed to delete task:', err);
-            loadTasks();
+            loadTasks(selectedDate);
         }
     };
 
@@ -366,13 +468,85 @@ export function DashboardPage() {
                             </div>
                         )}
 
+                        {/* Interactive Day Focus Bar */}
+                        <section className="day-navigator-bar">
+                            <div className="day-nav-left">
+                                <button
+                                    type="button"
+                                    className="day-nav-arrow-btn"
+                                    onClick={() => setSelectedDate((d) => shiftDateString(d, -1))}
+                                    title="View Previous Day"
+                                    aria-label="Previous Day"
+                                >
+                                    ◀
+                                </button>
+
+                                <div className="day-nav-current-badge">
+                                    <span className="day-nav-calendar-icon">📅</span>
+                                    <div className="day-nav-text-col">
+                                        <div className="day-nav-main-title">
+                                            <span>{dayInfo.mainText}</span>
+                                            {dayInfo.isToday && <span className="day-live-pulse-badge">LIVE TODAY</span>}
+                                        </div>
+                                        <span className="day-nav-subtext">{dayInfo.subText}</span>
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    className="day-nav-arrow-btn"
+                                    onClick={() => setSelectedDate((d) => shiftDateString(d, 1))}
+                                    title="View Next Day"
+                                    aria-label="Next Day"
+                                >
+                                    ▶
+                                </button>
+                            </div>
+
+                            <div className="day-nav-actions">
+                                {!dayInfo.isToday && (
+                                    <button
+                                        type="button"
+                                        className="day-today-jump-btn"
+                                        onClick={() => setSelectedDate(getTodayString())}
+                                    >
+                                        ⚡ Return to Today
+                                    </button>
+                                )}
+
+                                <label className="day-picker-label" title="Jump to custom date">
+                                    <span className="picker-icon">📆</span>
+                                    <span className="picker-text">Select Date</span>
+                                    <input
+                                        type="date"
+                                        className="day-hidden-date-input"
+                                        value={selectedDate}
+                                        onChange={(e) => {
+                                            if (e.target.value) {
+                                                setSelectedDate(e.target.value);
+                                            }
+                                        }}
+                                    />
+                                </label>
+
+                                <button
+                                    type="button"
+                                    className="day-view-logs-btn"
+                                    onClick={() => setIsLogDrawerOpen(true)}
+                                    title="Open Daily Task Log"
+                                >
+                                    <span>📖 Daily Task Log</span>
+                                </button>
+                            </div>
+                        </section>
+
                         {/* Metrics Stats Row */}
                         <div className="metrics-grid">
                             <div className="metric-card metric-all" onClick={() => setActiveFilter('all')}>
                                 <span className="metric-icon">📋</span>
                                 <div className="metric-info">
                                     <span className="metric-value">{counts.all}</span>
-                                    <span className="metric-label">Total Tracked</span>
+                                    <span className="metric-label">{dayInfo.isToday ? "Today's Tasks" : "Day Total"}</span>
                                 </div>
                             </div>
 
@@ -408,6 +582,7 @@ export function DashboardPage() {
                             searchQuery={searchQuery}
                             onSearchChange={setSearchQuery}
                             counts={counts}
+                            allLabel={dayInfo.isToday ? "Today's Tasks" : "Day Tasks"}
                         />
 
                         {/* Tasks Grid */}
@@ -419,26 +594,41 @@ export function DashboardPage() {
                         ) : filteredTasks.length === 0 ? (
                             <div className="empty-tasks-view">
                                 <span className="empty-tasks-emoji">
-                                    {activeFilter === 'done' ? '🏆' : activeFilter === 1 ? '😎' : '🚀'}
+                                    {activeFilter === 'done' ? '🏆' : activeFilter === 1 ? '😎' : dayInfo.isToday ? '🚀' : '📅'}
                                 </span>
                                 <h3>
                                     {activeFilter === 'done'
-                                        ? 'No completed tasks yet'
+                                        ? 'No completed tasks for this day'
                                         : activeFilter === 1
-                                        ? 'Zero P1 critical alerts! System Zen.'
-                                        : 'No tasks match your criteria'}
+                                        ? 'Zero P1 critical alerts for this day! System Zen.'
+                                        : dayInfo.isToday
+                                        ? 'No tasks scheduled for today'
+                                        : `No tasks found for ${dayInfo.mainText}`}
                                 </h3>
-                                <p>Create a task to initiate priority tracking and automated hourly reminders.</p>
-                                <Button
-                                    variant="primary"
-                                    onClick={() => {
-                                        setEditingTask(null);
-                                        setIsTaskModalOpen(true);
-                                    }}
-                                    icon="➕"
-                                >
-                                    Create First Task
-                                </Button>
+                                <p>
+                                    {dayInfo.isToday
+                                        ? 'Add tasks for today. When the day ends, tasks are cleanly archived into your Daily Task Log.'
+                                        : 'Past and future daily logs are organized in your Daily Task Log drawer.'}
+                                </p>
+                                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                    <Button
+                                        variant="primary"
+                                        onClick={() => {
+                                            setEditingTask(null);
+                                            setIsTaskModalOpen(true);
+                                        }}
+                                        icon="➕"
+                                    >
+                                        Create Task for {dayInfo.isToday ? 'Today' : 'This Day'}
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        onClick={() => setIsLogDrawerOpen(true)}
+                                        icon="📖"
+                                    >
+                                        Open Daily Task Log
+                                    </Button>
+                                </div>
                             </div>
                         ) : (
                             <div className="tasks-grid">
@@ -545,6 +735,7 @@ export function DashboardPage() {
                 }}
                 onSubmit={handleCreateOrUpdateTask}
                 initialTask={editingTask}
+                defaultDate={selectedDate}
             />
 
             {/* Daily Log Drawer */}

@@ -25,8 +25,16 @@ class TaskController {
             const doneParam = req.query.done;
             const priParam = req.query.pri;
             const searchParam = req.query.search;
+            const dateParam = req.query.date;
+            const tzOffsetParam = req.query.tzOffset;
 
-            const filters: { done?: boolean; pri?: number; search?: string } = {};
+            const filters: {
+                done?: boolean;
+                pri?: number;
+                search?: string;
+                date?: string;
+                tzOffset?: number;
+            } = {};
 
             if (doneParam !== undefined) {
                 filters.done = doneParam === 'true';
@@ -41,6 +49,17 @@ class TaskController {
 
             if (typeof searchParam === 'string' && searchParam.trim()) {
                 filters.search = searchParam.trim();
+            }
+
+            if (typeof dateParam === 'string' && dateParam.trim()) {
+                filters.date = dateParam.trim();
+            }
+
+            if (tzOffsetParam !== undefined) {
+                const parsedTz = Number(tzOffsetParam);
+                if (!isNaN(parsedTz)) {
+                    filters.tzOffset = parsedTz;
+                }
             }
 
             const tasks = await taskService.getTasks(userId, filters);

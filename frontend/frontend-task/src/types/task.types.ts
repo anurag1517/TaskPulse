@@ -37,4 +37,6 @@ export interface TaskFilterOptions {
     done?: boolean;
     pri?: PriorityLevel;
     search?: string;
+    date?: string; // 'YYYY-MM-DD' or 'all'
+    tzOffset?: number; // timezone offset in minutes
 }

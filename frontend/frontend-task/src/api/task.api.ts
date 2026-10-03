@@ -3,12 +3,15 @@ import type { CreateTaskDTO, Task, TaskFilterOptions, UpdateTaskDTO } from '../t
 
 export const taskApi = {
     async getTasks(filters?: TaskFilterOptions): Promise<{ success: boolean; count: number; data: Task[] }> {
+        const tzOffset = filters?.tzOffset ?? new Date().getTimezoneOffset();
         return apiClient<{ success: boolean; count: number; data: Task[] }>('/task', {
             method: 'GET',
             params: {
                 done: filters?.done,
                 pri: filters?.pri,
                 search: filters?.search,
+                date: filters?.date,
+                tzOffset,
             },
         });
     },

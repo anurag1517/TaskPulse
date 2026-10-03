@@ -11,9 +11,10 @@ interface TaskModalProps {
     onClose: () => void;
     onSubmit: (data: CreateTaskDTO | UpdateTaskDTO) => Promise<void>;
     initialTask?: Task | null;
+    defaultDate?: string; // 'YYYY-MM-DD'
 }
 
-export function TaskModal({ isOpen, onClose, onSubmit, initialTask }: TaskModalProps) {
+export function TaskModal({ isOpen, onClose, onSubmit, initialTask, defaultDate }: TaskModalProps) {
     const isEdit = Boolean(initialTask);
     const [topic, setTopic] = useState('');
     const [time, setTime] = useState('');
@@ -25,6 +26,8 @@ export function TaskModal({ isOpen, onClose, onSubmit, initialTask }: TaskModalP
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        const pad = (n: number) => String(n).padStart(2, '0');
+
         if (initialTask) {
             setTopic(initialTask.topic || '');
             setLoc(initialTask.loc || '');
@@ -33,14 +36,19 @@ export function TaskModal({ isOpen, onClose, onSubmit, initialTask }: TaskModalP
             setAssigner(initialTask.assigner || '');
             // Format time for datetime-local input
             const d = new Date(initialTask.time);
-            const pad = (n: number) => String(n).padStart(2, '0');
             const localIso = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
             setTime(localIso);
         } else {
-            // Default 1 hour from now
-            const now = new Date(Date.now() + 3600000);
-            const pad = (n: number) => String(n).padStart(2, '0');
-            const localIso = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+            // If defaultDate is provided, create initial datetime on that day
+            let baseDate = new Date(Date.now() + 3600000);
+            if (defaultDate) {
+                const parts = defaultDate.split('-').map(Number);
+                if (parts.length === 3 && !parts.some(isNaN)) {
+                    const now = new Date();
+                    baseDate = new Date(parts[0], parts[1] - 1, parts[2], now.getHours() + 1, now.getMinutes());
+                }
+            }
+            const localIso = `${baseDate.getFullYear()}-${pad(baseDate.getMonth() + 1)}-${pad(baseDate.getDate())}T${pad(baseDate.getHours())}:${pad(baseDate.getMinutes())}`;
             setTopic('');
             setTime(localIso);
             setLoc('');
@@ -49,7 +57,7 @@ export function TaskModal({ isOpen, onClose, onSubmit, initialTask }: TaskModalP
             setAssigner('');
         }
         setError(null);
-    }, [initialTask, isOpen]);
+    }, [initialTask, isOpen, defaultDate]);
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();

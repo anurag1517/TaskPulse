@@ -14,6 +14,7 @@ interface TaskFiltersProps {
         p4: number;
         done: number;
     };
+    allLabel?: string;
 }
 
 export function TaskFilters({
@@ -22,6 +23,7 @@ export function TaskFilters({
     searchQuery,
     onSearchChange,
     counts,
+    allLabel,
 }: TaskFiltersProps) {
     const filterOptions: Array<{
         id: 'all' | PriorityLevel | 'done';
@@ -30,7 +32,7 @@ export function TaskFilters({
         count: number;
         badgeClass: string;
     }> = [
-        { id: 'all', label: 'All Tasks', emoji: '⚡', count: counts.all, badgeClass: 'badge-all' },
+        { id: 'all', label: allLabel || 'All Tasks', emoji: '⚡', count: counts.all, badgeClass: 'badge-all' },
         { id: 1, label: 'P1 Urgent', emoji: '👹', count: counts.p1, badgeClass: 'badge-p1' },
         { id: 2, label: 'P2 High', emoji: '⚡', count: counts.p2, badgeClass: 'badge-p2' },
         { id: 3, label: 'P3 Focus', emoji: '🎯', count: counts.p3, badgeClass: 'badge-p3' },

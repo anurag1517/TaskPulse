@@ -1,0 +1,359 @@
+/* Backlog Drawer Styles */
+
+.backlog-panel {
+    max-width: 560px;
+}
+
+/* Stats Strip */
+.backlog-stats-strip {
+    padding: 12px 24px;
+    background: rgba(0, 0, 0, 0.4);
+    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+}
+
+.backlog-pill-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.backlog-metric-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.76rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+}
+
+.chip-total {
+    background: rgba(99, 102, 241, 0.12);
+    border-color: rgba(99, 102, 241, 0.3);
+    color: #c7d2fe;
+}
+
+.chip-overdue {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+    animation: pulseOverdue 2s infinite ease-in-out;
+}
+
+@keyframes pulseOverdue {
+    0%, 100% { border-color: rgba(239, 68, 68, 0.4); }
+    50% { border-color: rgba(239, 68, 68, 0.8); }
+}
+
+.chip-p1 {
+    background: rgba(249, 115, 22, 0.15);
+    border-color: rgba(249, 115, 22, 0.4);
+    color: #fdba74;
+}
+
+.chip-today {
+    background: rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.3);
+    color: #7dd3fc;
+}
+
+.chip-val {
+    font-weight: 700;
+    color: #ffffff;
+}
+
+/* Scope Filters & Date Filter Bar */
+.backlog-filter-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 24px;
+    background: rgba(0, 0, 0, 0.25);
+    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+}
+
+@media (min-width: 500px) {
+    .backlog-filter-bar {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
+
+.backlog-scope-tabs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.scope-tab-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.08));
+    color: var(--text-secondary, #94a3b8);
+    padding: 5px 11px;
+    border-radius: 8px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.scope-tab-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary, #ffffff);
+}
+
+.scope-tab-btn.active {
+    background: var(--primary, #6366f1);
+    border-color: #818cf8;
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+}
+
+.scope-tab-btn.tab-overdue.active {
+    background: #dc2626;
+    border-color: #ef4444;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+}
+
+/* Day Cards */
+.backlog-day-card {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.08));
+    border-radius: 14px;
+    overflow: hidden;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.backlog-day-card.card-overdue {
+    border-color: rgba(239, 68, 68, 0.35);
+    background: linear-gradient(180deg, rgba(239, 68, 68, 0.05) 0%, rgba(15, 23, 42, 0.7) 100%);
+}
+
+.backlog-day-card.card-today {
+    border-color: rgba(56, 189, 248, 0.35);
+    background: linear-gradient(180deg, rgba(56, 189, 248, 0.05) 0%, rgba(15, 23, 42, 0.7) 100%);
+}
+
+.backlog-day-card.card-upcoming {
+    border-color: rgba(168, 85, 247, 0.25);
+}
+
+.backlog-day-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.day-tag-overdue {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    color: #fca5a5;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.day-tag-today {
+    background: rgba(56, 189, 248, 0.2);
+    border: 1px solid rgba(56, 189, 248, 0.5);
+    color: #7dd3fc;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.day-tag-upcoming {
+    background: rgba(168, 85, 247, 0.2);
+    border: 1px solid rgba(168, 85, 247, 0.5);
+    color: #d8b4fe;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.backlog-day-status-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary, #94a3b8);
+    background: rgba(255, 255, 255, 0.04);
+    padding: 4px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Task Rows */
+.backlog-task-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.05));
+    transition: background 0.15s ease;
+}
+
+.backlog-task-row:last-child {
+    border-bottom: none;
+}
+
+.backlog-task-row:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.backlog-task-row.pri-1 {
+    border-left: 3px solid #ef4444;
+}
+
+.backlog-task-row.pri-2 {
+    border-left: 3px solid #f97316;
+}
+
+.backlog-task-row.pri-3 {
+    border-left: 3px solid #3b82f6;
+}
+
+.backlog-task-row.pri-4 {
+    border-left: 3px solid #10b981;
+}
+
+/* Checkbox Button */
+.backlog-checkbox-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 2px;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.checkbox-empty {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 2px solid var(--border-glass, rgba(255, 255, 255, 0.3));
+    transition: all 0.2s ease;
+    display: inline-block;
+}
+
+.backlog-checkbox-btn:hover .checkbox-empty {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.15);
+}
+
+.spinner-mini {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-top-color: #6366f1;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Task Meta Details */
+.task-row-remarks {
+    font-size: 0.74rem;
+    color: var(--text-secondary, #94a3b8);
+    margin: 4px 0 0 0;
+    line-height: 1.35;
+    background: rgba(0, 0, 0, 0.25);
+    padding: 4px 8px;
+    border-radius: 6px;
+    border-left: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.task-row-assigner {
+    font-size: 0.72rem;
+    color: #a5b4fc;
+}
+
+/* Actions in row */
+.backlog-task-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.btn-move-today {
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: #38bdf8;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 4px 9px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-move-today:hover:not(:disabled) {
+    background: rgba(56, 189, 248, 0.25);
+    border-color: #38bdf8;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
+}
+
+.btn-move-today:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-edit-backlog {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+    color: var(--text-secondary, #94a3b8);
+    font-size: 0.72rem;
+    padding: 4px 7px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-edit-backlog:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+/* Mobile responsive tweaks */
+@media (max-width: 640px) {
+    .backlog-panel {
+        max-width: 100%;
+    }
+
+    .backlog-task-row {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .backlog-task-actions {
+        margin-left: 0;
+        width: 100%;
+        justify-content: flex-end;
+    }
+}

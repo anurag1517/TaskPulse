@@ -18,6 +18,7 @@ interface DashboardSidebarProps {
     onSelectFilter: (filter: 'all' | PriorityLevel | 'done') => void;
     onOpenCreateTask: () => void;
     onOpenLogs: () => void;
+    onOpenBacklog?: () => void;
     onEnablePush?: () => void;
     pushEnabled?: boolean;
     isCollapsed: boolean;
@@ -31,6 +32,7 @@ export function DashboardSidebar({
     onSelectFilter,
     onOpenCreateTask,
     onOpenLogs,
+    onOpenBacklog,
     onEnablePush,
     pushEnabled = false,
     isCollapsed,
@@ -174,6 +176,18 @@ export function DashboardSidebar({
             {/* Quick Shortcuts */}
             <div className="desk-sidebar-shortcuts">
                 {!isCollapsed && <span className="desk-nav-header">SYSTEM</span>}
+
+                {onOpenBacklog && (
+                    <button
+                        type="button"
+                        className="desk-shortcut-btn"
+                        onClick={onOpenBacklog}
+                        title="View Task Backlog"
+                    >
+                        <span className="nav-btn-icon">📋</span>
+                        {!isCollapsed && <span className="nav-btn-label">Task Backlog</span>}
+                    </button>
+                )}
 
                 <button
                     type="button"

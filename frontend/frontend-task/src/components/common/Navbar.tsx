@@ -6,6 +6,7 @@ import './Navbar.css';
 interface NavbarProps {
     p1Count: number;
     onOpenLogs: () => void;
+    onOpenBacklog?: () => void;
     onOpenCreateTask: () => void;
     onOpenSidebar?: () => void;
     onEnablePush?: () => void;
@@ -16,6 +17,7 @@ interface NavbarProps {
 export function Navbar({
     p1Count,
     onOpenLogs,
+    onOpenBacklog,
     onOpenCreateTask,
     onOpenSidebar,
     onEnablePush,
@@ -119,6 +121,12 @@ export function Navbar({
                         >
                             <span>{pushEnabled ? '🔔 Hourly Alerts ON' : '🔕 Enable Reminders'}</span>
                         </button>
+                    )}
+
+                    {onOpenBacklog && (
+                        <Button variant="secondary" size="sm" onClick={onOpenBacklog} icon="📋">
+                            Backlog
+                        </Button>
                     )}
 
                     <Button variant="secondary" size="sm" onClick={onOpenLogs} icon="📜">

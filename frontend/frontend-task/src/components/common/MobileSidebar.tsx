@@ -20,6 +20,7 @@ interface MobileSidebarProps {
     onSelectFilter: (filter: 'all' | PriorityLevel | 'done') => void;
     onOpenCreateTask: () => void;
     onOpenLogs: () => void;
+    onOpenBacklog?: () => void;
     onEnablePush?: () => void;
     pushEnabled?: boolean;
 }
@@ -33,6 +34,7 @@ export function MobileSidebar({
     onSelectFilter,
     onOpenCreateTask,
     onOpenLogs,
+    onOpenBacklog,
     onEnablePush,
     pushEnabled = false,
 }: MobileSidebarProps) {
@@ -200,6 +202,21 @@ export function MobileSidebar({
                     >
                         Create New Task
                     </Button>
+
+                    {onOpenBacklog && (
+                        <Button
+                            variant="secondary"
+                            size="md"
+                            onClick={() => {
+                                onClose();
+                                onOpenBacklog();
+                            }}
+                            icon="📋"
+                            style={{ width: '100%' }}
+                        >
+                            Task Backlog
+                        </Button>
+                    )}
 
                     <Button
                         variant="secondary"

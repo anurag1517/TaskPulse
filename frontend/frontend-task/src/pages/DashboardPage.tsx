@@ -8,6 +8,7 @@ import { TaskCard } from '../components/task/TaskCard';
 import { TaskFilters } from '../components/task/TaskFilters';
 import { TaskModal } from '../components/modals/TaskModal';
 import { LogDrawer } from '../components/modals/LogDrawer';
+import { BacklogDrawer } from '../components/modals/BacklogDrawer';
 import { Button } from '../components/common/Button';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import { playUrgentAlertChime } from '../utils/audio';
@@ -39,6 +40,7 @@ export function DashboardPage() {
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const [isLogDrawerOpen, setIsLogDrawerOpen] = useState(false);
+    const [isBacklogDrawerOpen, setIsBacklogDrawerOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [pushEnabled, setPushEnabled] = useState(false);
     const [pushStatusMessage, setPushStatusMessage] = useState<string | null>(null);
@@ -329,6 +331,7 @@ export function DashboardPage() {
             <Navbar
                 p1Count={counts.p1}
                 onOpenLogs={() => setIsLogDrawerOpen(true)}
+                onOpenBacklog={() => setIsBacklogDrawerOpen(true)}
                 onOpenCreateTask={() => {
                     setEditingTask(null);
                     setIsTaskModalOpen(true);
@@ -485,7 +488,14 @@ export function DashboardPage() {
                                         onClick={() => setIsLogDrawerOpen(true)}
                                         icon="📖"
                                     >
-                                        Open Daily Task Log
+                                        Daily Task Log
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        onClick={() => setIsBacklogDrawerOpen(true)}
+                                        icon="📋"
+                                    >
+                                        Task Backlog
                                     </Button>
                                 </div>
                             </div>
@@ -580,6 +590,7 @@ export function DashboardPage() {
                         setIsTaskModalOpen(true);
                     }}
                     onOpenLogs={() => setIsLogDrawerOpen(true)}
+                    onOpenBacklog={() => setIsBacklogDrawerOpen(true)}
                     onEnablePush={handleEnablePush}
                     pushEnabled={pushEnabled}
                 />
@@ -600,6 +611,18 @@ export function DashboardPage() {
             <LogDrawer
                 isOpen={isLogDrawerOpen}
                 onClose={() => setIsLogDrawerOpen(false)}
+            />
+
+            {/* Task Backlog Drawer */}
+            <BacklogDrawer
+                isOpen={isBacklogDrawerOpen}
+                onClose={() => setIsBacklogDrawerOpen(false)}
+                onTaskUpdated={loadTasks}
+                onEditTask={(t) => {
+                    setEditingTask(t);
+                    setIsBacklogDrawerOpen(false);
+                    setIsTaskModalOpen(true);
+                }}
             />
         </div>
     );

@@ -524,21 +524,20 @@ export function DashboardPage() {
                 <nav className="mobile-bottom-dock" aria-label="Mobile navigation dock">
                     <button
                         type="button"
-                        className={`dock-tab ${activeFilter === 'all' ? 'dock-active' : ''}`}
+                        className={`dock-tab ${activeFilter === 'all' && !isBacklogDrawerOpen && !isLogDrawerOpen ? 'dock-active' : ''}`}
                         onClick={() => setActiveFilter('all')}
                     >
-                        <span className="dock-icon">📋</span>
+                        <span className="dock-icon">🎯</span>
                         <span className="dock-label">Tasks</span>
                     </button>
 
                     <button
                         type="button"
-                        className={`dock-tab ${activeFilter === 1 ? 'dock-active' : ''}`}
-                        onClick={() => setActiveFilter(1)}
+                        className={`dock-tab ${isBacklogDrawerOpen ? 'dock-active' : ''}`}
+                        onClick={() => setIsBacklogDrawerOpen(true)}
                     >
-                        <span className="dock-icon">👹</span>
-                        <span className="dock-label">P1 Focus</span>
-                        {counts.p1 > 0 && <span className="dock-badge">{counts.p1}</span>}
+                        <span className="dock-icon">📋</span>
+                        <span className="dock-label">Backlog</span>
                     </button>
 
                     {/* Center Glowing Action Button */}
@@ -558,7 +557,7 @@ export function DashboardPage() {
 
                     <button
                         type="button"
-                        className="dock-tab"
+                        className={`dock-tab ${isLogDrawerOpen ? 'dock-active' : ''}`}
                         onClick={() => setIsLogDrawerOpen(true)}
                     >
                         <span className="dock-icon">📜</span>
@@ -567,7 +566,7 @@ export function DashboardPage() {
 
                     <button
                         type="button"
-                        className="dock-tab"
+                        className={`dock-tab ${isSidebarOpen ? 'dock-active' : ''}`}
                         onClick={() => setIsSidebarOpen(true)}
                     >
                         <span className="dock-icon">☰</span>

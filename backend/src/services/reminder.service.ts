@@ -78,6 +78,9 @@ class ReminderService {
                         taskId: task.id,
                         priority: task.pri,
                         topic: task.topic,
+                        time: task.time instanceof Date ? task.time.toISOString() : new Date(task.time).toISOString(),
+                        loc: task.loc || "",
+                        diffMinutes,
                     },
                 });
 

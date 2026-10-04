@@ -1,4 +1,11 @@
-// TaskPulse Service Worker for Push Notifications
+// Immediately take control of clients
+self.addEventListener('install', () => {
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+    event.waitUntil(self.clients.claim());
+});
 
 self.addEventListener('push', (event) => {
     let payload = { title: 'TaskPulse Reminder', body: 'You have a pending task!' };
@@ -10,8 +17,24 @@ self.addEventListener('push', (event) => {
         payload.body = event.data.text();
     }
 
+    let body = payload.body;
+    // Format scheduled time in the user's local device timezone if ISO time is provided
+    if (payload.data && payload.data.time) {
+        try {
+            const taskTime = new Date(payload.data.time);
+            if (!isNaN(taskTime.getTime())) {
+                const formattedTime = taskTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                body = payload.data.loc
+                    ? `Location: ${payload.data.loc}. Scheduled: ${formattedTime}`
+                    : `Scheduled for: ${formattedTime}`;
+            }
+        } catch (e) {
+            console.error('[SW] Failed to format task time:', e);
+        }
+    }
+
     const options = {
-        body: payload.body,
+        body,
         icon: '/icon-192.png',
         badge: '/icon-192.png',
         vibrate: [200, 100, 200],

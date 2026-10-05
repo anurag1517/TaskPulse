@@ -8,7 +8,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-    let payload = { title: 'TaskPulse Reminder', body: 'You have a pending task!' };
+    let payload = { title: 'Declutter Reminder', body: 'You have a pending task!' };
     try {
         if (event.data) {
             payload = event.data.json();

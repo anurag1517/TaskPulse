@@ -109,7 +109,7 @@ export function TaskModal({ isOpen, onClose, onSubmit, initialTask, defaultDate 
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title={isEdit ? 'Edit Task' : 'Create New Task'}
+            title={isEdit ? 'Edit Task' : 'Add Task'}
             subtitle={isEdit ? 'Update details and priority urgency' : 'Add a task to start tracking and receiving hourly reminders'}
             maxWidth="600px"
         >
@@ -196,7 +196,7 @@ export function TaskModal({ isOpen, onClose, onSubmit, initialTask, defaultDate 
                         Cancel
                     </Button>
                     <Button variant={pri === 1 ? 'p1' : 'primary'} type="submit" loading={submitting}>
-                        {isEdit ? 'Save Changes' : 'Create Task'}
+                        {isEdit ? 'Save Changes' : 'Add Task'}
                     </Button>
                 </div>
             </form>

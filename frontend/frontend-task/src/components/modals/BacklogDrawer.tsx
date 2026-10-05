@@ -142,7 +142,7 @@ export function BacklogDrawer({ isOpen, onClose, onTaskUpdated, onEditTask }: Ba
                             <h2 className="drawer-title">Task Backlog</h2>
                         </div>
                         <p className="drawer-subtitle">
-                            Pending tasks organized date-by-date with overdue alerts and quick actions.
+                            Overdue pending tasks organized date-by-date with quick reschedule to today.
                         </p>
                     </div>
                     <button className="drawer-close-btn" onClick={onClose} aria-label="Close drawer">
@@ -156,16 +156,9 @@ export function BacklogDrawer({ isOpen, onClose, onTaskUpdated, onEditTask }: Ba
                         <div className="backlog-pill-row">
                             <div className="backlog-metric-chip chip-total">
                                 <span className="chip-icon">📋</span>
-                                <span className="chip-label">Total Backlog:</span>
+                                <span className="chip-label">Overdue Tasks:</span>
                                 <strong className="chip-val">{stats.totalBacklog}</strong>
                             </div>
-                            {stats.overdueCount > 0 && (
-                                <div className="backlog-metric-chip chip-overdue">
-                                    <span className="chip-icon">⚠️</span>
-                                    <span className="chip-label">Overdue:</span>
-                                    <strong className="chip-val">{stats.overdueCount}</strong>
-                                </div>
-                            )}
                             {stats.p1Count > 0 && (
                                 <div className="backlog-metric-chip chip-p1">
                                     <span className="chip-icon">👹</span>
@@ -173,10 +166,17 @@ export function BacklogDrawer({ isOpen, onClose, onTaskUpdated, onEditTask }: Ba
                                     <strong className="chip-val">{stats.p1Count}</strong>
                                 </div>
                             )}
-                            <div className="backlog-metric-chip chip-today">
-                                <span className="chip-icon">⚡</span>
-                                <span className="chip-label">Today:</span>
-                                <strong className="chip-val">{stats.todayCount}</strong>
+                            {stats.p2Count > 0 && (
+                                <div className="backlog-metric-chip chip-p2">
+                                    <span className="chip-icon">⚡</span>
+                                    <span className="chip-label">P2 High:</span>
+                                    <strong className="chip-val">{stats.p2Count}</strong>
+                                </div>
+                            )}
+                            <div className="backlog-metric-chip chip-overdue">
+                                <span className="chip-icon">⚠️</span>
+                                <span className="chip-label">Days Overdue:</span>
+                                <strong className="chip-val">{pagination.totalDays}</strong>
                             </div>
                         </div>
                     </div>
@@ -190,21 +190,7 @@ export function BacklogDrawer({ isOpen, onClose, onTaskUpdated, onEditTask }: Ba
                             className={`scope-tab-btn ${scope === 'all' ? 'active' : ''}`}
                             onClick={() => handleScopeChange('all')}
                         >
-                            All ({stats?.totalBacklog ?? 0})
-                        </button>
-                        <button
-                            type="button"
-                            className={`scope-tab-btn tab-overdue ${scope === 'overdue' ? 'active' : ''}`}
-                            onClick={() => handleScopeChange('overdue')}
-                        >
-                            ⚠️ Overdue ({stats?.overdueCount ?? 0})
-                        </button>
-                        <button
-                            type="button"
-                            className={`scope-tab-btn ${scope === 'upcoming' ? 'active' : ''}`}
-                            onClick={() => handleScopeChange('upcoming')}
-                        >
-                            📅 Today & Upcoming ({((stats?.todayCount ?? 0) + (stats?.futureCount ?? 0))})
+                            ⚠️ All Overdue ({stats?.totalBacklog ?? 0})
                         </button>
                     </div>
 
@@ -278,11 +264,9 @@ export function BacklogDrawer({ isOpen, onClose, onTaskUpdated, onEditTask }: Ba
                             <span className="empty-icon">🎉</span>
                             <h4>Zero Backlog!</h4>
                             <p>
-                                {scope === 'overdue'
-                                    ? 'No overdue tasks found. You are completely caught up with the past!'
-                                    : filterDate
-                                    ? `No pending tasks found for ${filterDate}.`
-                                    : 'All tasks are completed. Create new tasks from your dashboard whenever you are ready!'}
+                                {filterDate
+                                    ? `No overdue tasks found for ${filterDate}.`
+                                    : 'No overdue tasks found! You are completely caught up.'}
                             </p>
                         </div>
                     ) : (

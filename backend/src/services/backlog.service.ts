@@ -66,14 +66,43 @@ class BacklogService {
         const yesterdayAdjusted = new Date(adjustedNow.getTime() - 24 * 60 * 60 * 1000);
         const yesterdayKey = `${yesterdayAdjusted.getUTCFullYear()}-${String(yesterdayAdjusted.getUTCMonth() + 1).padStart(2, '0')}-${String(yesterdayAdjusted.getUTCDate()).padStart(2, '0')}`;
 
+        const [todayY, todayM, todayD] = todayKey.split('-').map(Number);
+        const startOfTodayUtc = new Date(Date.UTC(todayY, todayM - 1, todayD, 0, 0, 0) + (tzOffset * 60 * 1000));
+
         const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
         // =========================================================================
-        // CASE 1: USER SPECIFIES A DATE -> FETCH & RENDER ONLY THAT PARTICULAR DAY
+        // CASE 1: USER SPECIFIES A DATE -> FETCH & RENDER ONLY IF OVERDUE
         // =========================================================================
         if (targetDate && targetDate.trim()) {
             const normalizedDate = targetDate.trim();
+
+            // Backlog only holds overdue tasks: if requested date is today or future, backlog is empty
+            if (normalizedDate >= todayKey) {
+                return {
+                    pagination: {
+                        page: 1,
+                        limit: 1,
+                        totalDays: 0,
+                        totalPages: 1,
+                        hasNextPage: false,
+                        hasPrevPage: false,
+                    },
+                    data: [],
+                    stats: {
+                        totalBacklog: 0,
+                        overdueCount: 0,
+                        todayCount: 0,
+                        futureCount: 0,
+                        p1Count: 0,
+                        p2Count: 0,
+                        p3Count: 0,
+                        p4Count: 0,
+                    },
+                };
+            }
+
             const parts = normalizedDate.split('-').map(Number);
 
             if (parts.length === 3 && !parts.some(isNaN)) {
@@ -81,14 +110,14 @@ class BacklogService {
                 const startUtcMs = Date.UTC(year, month - 1, day, 0, 0, 0) + (tzOffset * 60 * 1000);
                 const endUtcMs = startUtcMs + 24 * 60 * 60 * 1000;
 
-                // Query DB strictly for that single day
+                // Query DB strictly for that single overdue day
                 const tasks = await prisma.task.findMany({
                     where: {
                         userId,
                         done: false,
                         time: {
                             gte: new Date(startUtcMs),
-                            lt: new Date(endUtcMs),
+                            lt: new Date(Math.min(endUtcMs, startOfTodayUtc.getTime())),
                         },
                     },
                     orderBy: [
@@ -98,44 +127,28 @@ class BacklogService {
                     ],
                 });
 
-                const isOverdue = normalizedDate < todayKey;
-                const isToday = normalizedDate === todayKey;
-                const isFuture = normalizedDate > todayKey;
-
                 const p1Count = tasks.filter((t) => t.pri === 1).length;
                 const p2Count = tasks.filter((t) => t.pri === 2).length;
                 const p3Count = tasks.filter((t) => t.pri === 3).length;
                 const p4Count = tasks.filter((t) => t.pri === 4).length;
 
-                let emoji = "📋";
-                let statusLabel = "Backlog";
-                if (isOverdue) {
-                    emoji = p1Count > 0 ? "🚨" : "⚠️";
-                    statusLabel = "Overdue Backlog";
-                } else if (isToday) {
-                    emoji = "⚡";
-                    statusLabel = "Due Today";
-                } else {
-                    emoji = "📅";
-                    statusLabel = "Upcoming";
-                }
+                const emoji = p1Count > 0 ? "🚨" : "⚠️";
+                const statusLabel = "Overdue Backlog";
 
                 const dateObj = new Date(Date.UTC(year, month - 1, day));
                 const formattedDate = `${monthNames[dateObj.getUTCMonth()]} ${dateObj.getUTCDate()}, ${dateObj.getUTCFullYear()}`;
 
                 let displayDate = `${dayNames[dateObj.getUTCDay()]}, ${formattedDate}`;
-                if (normalizedDate === todayKey) {
-                    displayDate = `Today • ${formattedDate}`;
-                } else if (normalizedDate === yesterdayKey) {
+                if (normalizedDate === yesterdayKey) {
                     displayDate = `Yesterday • ${formattedDate}`;
                 }
 
                 const dayEntry: DayWiseBacklog = {
                     date: normalizedDate,
                     displayDate,
-                    isOverdue,
-                    isToday,
-                    isFuture,
+                    isOverdue: true,
+                    isToday: false,
+                    isFuture: false,
                     totalTasks: tasks.length,
                     p1Count,
                     p2Count,
@@ -155,9 +168,13 @@ class BacklogService {
                     })),
                 };
 
-                // Fast count of total pending backlog for stats
-                const totalPendingCount = await prisma.task.count({
-                    where: { userId, done: false },
+                // Fast count of total overdue backlog for stats
+                const totalOverdueCount = await prisma.task.count({
+                    where: {
+                        userId,
+                        done: false,
+                        time: { lt: startOfTodayUtc },
+                    },
                 });
 
                 return {
@@ -171,10 +188,10 @@ class BacklogService {
                     },
                     data: tasks.length > 0 ? [dayEntry] : [],
                     stats: {
-                        totalBacklog: totalPendingCount,
-                        overdueCount: isOverdue ? tasks.length : 0,
-                        todayCount: isToday ? tasks.length : 0,
-                        futureCount: isFuture ? tasks.length : 0,
+                        totalBacklog: totalOverdueCount,
+                        overdueCount: totalOverdueCount,
+                        todayCount: 0,
+                        futureCount: 0,
                         p1Count,
                         p2Count,
                         p3Count,
@@ -185,29 +202,30 @@ class BacklogService {
         }
 
         // =========================================================================
-        // CASE 2: INITIAL / PAGINATED FETCH -> FETCH ONLY FOR 3 DAYS
+        // CASE 2: PAGINATED FETCH -> FETCH ONLY OVERDUE DAYS
         // =========================================================================
 
-        // Lightweight query: retrieve only timestamp & priority to determine unique backlog dates
+        // Lightweight query: retrieve only timestamp & priority for uncompleted tasks prior to today
         const pendingMeta = await prisma.task.findMany({
             where: {
                 userId,
                 done: false,
+                time: {
+                    lt: startOfTodayUtc,
+                },
             },
             select: {
                 time: true,
                 pri: true,
             },
             orderBy: {
-                time: 'asc',
+                time: 'desc',
             },
         });
 
-        // Group into unique day keys in user's timezone
+        // Group into unique overdue day keys in user's timezone
         const daySet = new Set<string>();
         let overdueCount = 0;
-        let todayCount = 0;
-        let futureCount = 0;
         let p1Count = 0;
         let p2Count = 0;
         let p3Count = 0;
@@ -218,32 +236,25 @@ class BacklogService {
             const adjustedTask = new Date(taskTime.getTime() - tzOffset * 60 * 1000);
             const dateKey = `${adjustedTask.getUTCFullYear()}-${String(adjustedTask.getUTCMonth() + 1).padStart(2, '0')}-${String(adjustedTask.getUTCDate()).padStart(2, '0')}`;
 
-            daySet.add(dateKey);
+            if (dateKey < todayKey) {
+                daySet.add(dateKey);
+                overdueCount++;
 
-            if (dateKey < todayKey) overdueCount++;
-            else if (dateKey === todayKey) todayCount++;
-            else futureCount++;
-
-            if (item.pri === 1) p1Count++;
-            else if (item.pri === 2) p2Count++;
-            else if (item.pri === 3) p3Count++;
-            else if (item.pri === 4) p4Count++;
+                if (item.pri === 1) p1Count++;
+                else if (item.pri === 2) p2Count++;
+                else if (item.pri === 3) p3Count++;
+                else if (item.pri === 4) p4Count++;
+            }
         }
 
-        let sortedDayKeys = Array.from(daySet).sort((a, b) => a.localeCompare(b));
-
-        // Filter days by scope if requested
-        if (scope === 'overdue') {
-            sortedDayKeys = sortedDayKeys.filter((k) => k < todayKey);
-        } else if (scope === 'upcoming') {
-            sortedDayKeys = sortedDayKeys.filter((k) => k >= todayKey);
-        }
+        // Sort overdue days: most recent overdue day first (e.g. yesterday first)
+        let sortedDayKeys = Array.from(daySet).sort((a, b) => b.localeCompare(a));
 
         const totalDays = sortedDayKeys.length;
         const totalPages = Math.max(1, Math.ceil(totalDays / safeLimit));
         const currentPage = Math.min(safePage, totalPages);
         const offset = (currentPage - 1) * safeLimit;
-        // Slice for exactly 3 days (or safeLimit)
+        // Slice for safeLimit days (default 3)
         const pageDayKeys = sortedDayKeys.slice(offset, offset + safeLimit);
 
         if (pageDayKeys.length === 0) {
@@ -258,10 +269,10 @@ class BacklogService {
                 },
                 data: [],
                 stats: {
-                    totalBacklog: pendingMeta.length,
+                    totalBacklog: overdueCount,
                     overdueCount,
-                    todayCount,
-                    futureCount,
+                    todayCount: 0,
+                    futureCount: 0,
                     p1Count,
                     p2Count,
                     p3Count,
@@ -270,21 +281,22 @@ class BacklogService {
             };
         }
 
-        // Calculate UTC boundaries spanning ONLY the 3 days on this page
-        const firstParts = pageDayKeys[0].split('-').map(Number);
-        const lastParts = pageDayKeys[pageDayKeys.length - 1].split('-').map(Number);
+        // Calculate UTC boundaries spanning the days on this page
+        const dayKeysSortedAsc = [...pageDayKeys].sort((a, b) => a.localeCompare(b));
+        const firstParts = dayKeysSortedAsc[0].split('-').map(Number);
+        const lastParts = dayKeysSortedAsc[dayKeysSortedAsc.length - 1].split('-').map(Number);
 
         const rangeStartUtcMs = Date.UTC(firstParts[0], firstParts[1] - 1, firstParts[2], 0, 0, 0) + (tzOffset * 60 * 1000);
         const rangeEndUtcMs = Date.UTC(lastParts[0], lastParts[1] - 1, lastParts[2], 0, 0, 0) + 24 * 60 * 60 * 1000 + (tzOffset * 60 * 1000);
 
-        // Fetch FULL task details strictly for those 3 days
+        // Fetch FULL task details strictly for those overdue days
         const tasks = await prisma.task.findMany({
             where: {
                 userId,
                 done: false,
                 time: {
                     gte: new Date(rangeStartUtcMs),
-                    lt: new Date(rangeEndUtcMs),
+                    lt: new Date(Math.min(rangeEndUtcMs, startOfTodayUtc.getTime())),
                 },
             },
             orderBy: [
@@ -294,7 +306,7 @@ class BacklogService {
             ],
         });
 
-        // Group tasks into the 3 day entries
+        // Group tasks into the day entries
         const pageDayMap = new Map<string, typeof tasks>();
         for (const key of pageDayKeys) {
             pageDayMap.set(key, []);
@@ -318,40 +330,24 @@ class BacklogService {
             const p3 = dayTasks.filter((t) => t.pri === 3).length;
             const p4 = dayTasks.filter((t) => t.pri === 4).length;
 
-            const isOverdue = key < todayKey;
-            const isToday = key === todayKey;
-            const isFuture = key > todayKey;
-
-            let emoji = "📋";
-            let statusLabel = "Backlog";
-            if (isOverdue) {
-                emoji = p1 > 0 ? "🚨" : "⚠️";
-                statusLabel = "Overdue Backlog";
-            } else if (isToday) {
-                emoji = "⚡";
-                statusLabel = "Due Today";
-            } else {
-                emoji = "📅";
-                statusLabel = "Upcoming";
-            }
+            const emoji = p1 > 0 ? "🚨" : "⚠️";
+            const statusLabel = "Overdue Backlog";
 
             const [y, m, d] = key.split('-').map(Number);
             const dateObj = new Date(Date.UTC(y, m - 1, d));
             const formattedDate = `${monthNames[dateObj.getUTCMonth()]} ${dateObj.getUTCDate()}, ${dateObj.getUTCFullYear()}`;
 
             let displayDate = `${dayNames[dateObj.getUTCDay()]}, ${formattedDate}`;
-            if (key === todayKey) {
-                displayDate = `Today • ${formattedDate}`;
-            } else if (key === yesterdayKey) {
+            if (key === yesterdayKey) {
                 displayDate = `Yesterday • ${formattedDate}`;
             }
 
             return {
                 date: key,
                 displayDate,
-                isOverdue,
-                isToday,
-                isFuture,
+                isOverdue: true,
+                isToday: false,
+                isFuture: false,
                 totalTasks,
                 p1Count: p1,
                 p2Count: p2,
@@ -383,10 +379,10 @@ class BacklogService {
             },
             data: days,
             stats: {
-                totalBacklog: pendingMeta.length,
+                totalBacklog: overdueCount,
                 overdueCount,
-                todayCount,
-                futureCount,
+                todayCount: 0,
+                futureCount: 0,
                 p1Count,
                 p2Count,
                 p3Count,

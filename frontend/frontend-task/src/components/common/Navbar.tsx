@@ -134,7 +134,7 @@ export function Navbar({
                     </Button>
 
                     <Button variant="p1" size="sm" onClick={onOpenCreateTask} icon="➕">
-                        New Task
+                        Add Task
                     </Button>
 
                     {/* User profile & Logout */}

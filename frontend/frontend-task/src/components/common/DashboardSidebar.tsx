@@ -94,9 +94,9 @@ export function DashboardSidebar({
                     onClick={onOpenCreateTask}
                     icon="➕"
                     style={{ width: '100%', justifyContent: isCollapsed ? 'center' : 'flex-start' }}
-                    title="Create New Task"
+                    title="Add Task"
                 >
-                    {!isCollapsed && 'New Task'}
+                    {!isCollapsed && 'Add Task'}
                 </Button>
             </div>
 

@@ -200,7 +200,7 @@ export function MobileSidebar({
                         icon="➕"
                         style={{ width: '100%' }}
                     >
-                        Create New Task
+                        Add Task
                     </Button>
 
                     {onOpenBacklog && (

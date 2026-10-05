@@ -39,7 +39,7 @@ class TaskService {
             done?: boolean;
             pri?: number;
             topic?: { contains: string; mode?: 'insensitive' };
-            time?: { gte: Date; lt: Date };
+            time?: { gte?: Date; lt?: Date };
         } = { userId };
 
         if (filters?.done !== undefined) {
@@ -55,7 +55,9 @@ class TaskService {
         }
 
         // If date is explicitly 'all', skip date filtering.
-        // Otherwise, filter by the specified day (defaulting to today in the user's timezone).
+        // If a specific date is given, filter for that day.
+        // Default behavior (no date specified): return active tasks from start of today onwards.
+        // Overdue tasks (before start of today) are excluded and handled strictly in Backlog.
         if (filters?.date !== 'all') {
             const tzOffset = filters?.tzOffset !== undefined ? Number(filters.tzOffset) : 0;
             let targetDateStr = filters?.date;
@@ -65,19 +67,27 @@ class TaskService {
                 const now = new Date();
                 const adjustedNow = new Date(now.getTime() - tzOffset * 60 * 1000);
                 targetDateStr = `${adjustedNow.getUTCFullYear()}-${String(adjustedNow.getUTCMonth() + 1).padStart(2, '0')}-${String(adjustedNow.getUTCDate()).padStart(2, '0')}`;
-            }
-
-            const parts = targetDateStr.split('-').map(Number);
-            if (parts.length === 3 && !parts.some(isNaN)) {
+                const parts = targetDateStr.split('-').map(Number);
                 const [year, month, day] = parts;
-                // startUtc = midnight of that day in UTC shifted by tzOffset
                 const startUtcMs = Date.UTC(year, month - 1, day, 0, 0, 0) + (tzOffset * 60 * 1000);
-                const endUtcMs = startUtcMs + 24 * 60 * 60 * 1000;
 
+                // Show all active tasks from start of today onwards
                 whereClause.time = {
                     gte: new Date(startUtcMs),
-                    lt: new Date(endUtcMs),
                 };
+            } else {
+                const parts = targetDateStr.split('-').map(Number);
+                if (parts.length === 3 && !parts.some(isNaN)) {
+                    const [year, month, day] = parts;
+                    // startUtc = midnight of that day in UTC shifted by tzOffset
+                    const startUtcMs = Date.UTC(year, month - 1, day, 0, 0, 0) + (tzOffset * 60 * 1000);
+                    const endUtcMs = startUtcMs + 24 * 60 * 60 * 1000;
+
+                    whereClause.time = {
+                        gte: new Date(startUtcMs),
+                        lt: new Date(endUtcMs),
+                    };
+                }
             }
         }
 

@@ -413,7 +413,7 @@ export function DashboardPage() {
                                 <span className="metric-icon">📋</span>
                                 <div className="metric-info">
                                     <span className="metric-value">{counts.all}</span>
-                                    <span className="metric-label">Today's Tasks</span>
+                                    <span className="metric-label">Tasks</span>
                                 </div>
                             </div>
 
@@ -464,13 +464,13 @@ export function DashboardPage() {
                                 </span>
                                 <h3>
                                     {activeFilter === 'done'
-                                        ? 'No completed tasks today'
+                                        ? 'No completed tasks'
                                         : activeFilter === 1
-                                        ? 'Zero P1 critical alerts today! System Zen.'
-                                        : 'No tasks scheduled for today'}
+                                        ? 'Zero P1 critical alerts! System Zen.'
+                                        : 'No tasks scheduled'}
                                 </h3>
                                 <p>
-                                    Create tasks for today to begin tracking. Past days are preserved in your Daily Task Log.
+                                    Add a task to begin tracking. Overdue tasks are moved to your Task Backlog.
                                 </p>
                                 <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
                                     <Button
@@ -481,7 +481,7 @@ export function DashboardPage() {
                                         }}
                                         icon="➕"
                                     >
-                                        Create Task
+                                        Add Task
                                     </Button>
                                     <Button
                                         variant="ghost"
@@ -549,7 +549,7 @@ export function DashboardPage() {
                                 setEditingTask(null);
                                 setIsTaskModalOpen(true);
                             }}
-                            aria-label="Create new task"
+                            aria-label="Add task"
                         >
                             ➕
                         </button>

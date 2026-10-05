@@ -7,7 +7,7 @@ import webpush from "web-push";
 if (env.vapidPublicKey && env.vapidPrivateKey) {
     try {
         webpush.setVapidDetails(
-            env.vapidSubject || "mailto:admin@taskpulse.com",
+            env.vapidSubject || "mailto:admin@declutter.com",
             env.vapidPublicKey,
             env.vapidPrivateKey
         );

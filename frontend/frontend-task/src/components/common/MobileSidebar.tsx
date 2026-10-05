@@ -78,7 +78,7 @@ export function MobileSidebar({
                             {user?.name ? user.name[0].toUpperCase() : user?.email[0].toUpperCase()}
                         </div>
                         <div className="sidebar-user-details">
-                            <span className="sidebar-user-name">{user?.name || 'TaskPulse User'}</span>
+                            <span className="sidebar-user-name">{user?.name || 'Declutter User'}</span>
                             <span className="sidebar-user-email">{user?.email}</span>
                         </div>
                     </div>
@@ -258,7 +258,7 @@ export function MobileSidebar({
                         onClick={logout}
                         style={{ width: '100%', justifyContent: 'center' }}
                     >
-                        Sign Out of TaskPulse
+                        Sign Out of Declutter
                     </Button>
                 </div>
             </aside>

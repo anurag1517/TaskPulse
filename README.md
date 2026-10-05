@@ -1,4 +1,4 @@
-# TaskPulse 😤
+# Declutter 😤
 
 A full-stack task manager with priority-based nudging, reminder logic, push notifications, and an activity log. The app is split into a Prisma-backed Express API and a Vite + React frontend.
 

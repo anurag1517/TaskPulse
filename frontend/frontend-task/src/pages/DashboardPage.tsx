@@ -154,7 +154,7 @@ export function DashboardPage() {
         try {
             const options: NotificationOptions = {
                 icon: '/icon-192.png',
-                tag: 'taskpulse-' + Date.now(),
+                tag: 'declutter-' + Date.now(),
             };
             if (body) {
                 options.body = body;
@@ -169,7 +169,7 @@ export function DashboardPage() {
                 navigator.serviceWorker.ready.then((reg) => {
                     const options: NotificationOptions = {
                         icon: '/icon-192.png',
-                        tag: 'taskpulse-' + Date.now(),
+                        tag: 'declutter-' + Date.now(),
                     };
                     if (body) {
                         options.body = body;
@@ -282,7 +282,7 @@ export function DashboardPage() {
                 setTimeout(() => setPushStatusMessage(null), 5000);
 
                 // Immediately fire a tactile test notification to the laptop screen
-                showDesktopNotification('🔥 TaskPulse Notifications Active!');
+                showDesktopNotification('🔥 Declutter Notifications Active!');
 
                 // Register ServiceWorker PushSubscription with backend
                 try {

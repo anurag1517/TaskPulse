@@ -20,7 +20,7 @@ function AppContent() {
             }}>
                 <span style={{ fontSize: '2.5rem', animation: 'flicker 1.2s infinite alternate' }}>🔥</span>
                 <span className="spinner" style={{ width: '28px', height: '28px', borderWidth: '3px' }} />
-                <p style={{ fontWeight: 600, letterSpacing: '0.05em', fontSize: '0.9rem' }}>INITIALIZING TASKPULSE...</p>
+                <p style={{ fontWeight: 600, letterSpacing: '0.05em', fontSize: '0.9rem' }}>INITIALIZING DECLUTTER...</p>
             </div>
         );
     }

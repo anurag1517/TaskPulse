@@ -79,7 +79,7 @@ export function AuthPage() {
                 <section className="auth-showcase-panel">
                     <div className="showcase-brand">
                         <span className="brand-flame">🔥</span>
-                        <h1 className="showcase-title">TaskPulse</h1>
+                        <h1 className="showcase-title">Declutter</h1>
                     </div>
 
                     <h2 className="showcase-headline">
@@ -228,7 +228,7 @@ export function AuthPage() {
                                 loading={loading}
                                 className="auth-submit-btn"
                             >
-                                {isLogin ? 'Sign In to TaskPulse' : 'Create Your Account'}
+                                {isLogin ? 'Sign In to Declutter' : 'Create Your Account'}
                             </Button>
                         </form>
                     </div>

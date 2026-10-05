@@ -55,7 +55,7 @@ export function Mascot({ mood = 'idle', size = 72, className = '' }: MascotProps
             default:
                 return {
                     emoji: '🤖',
-                    label: 'TASKPULSE AI',
+                    label: 'DECLUTTER AI',
                     subtext: 'Ready for action.',
                     badgeColor: 'var(--text-secondary)',
                     animClass: 'mascot-idle',

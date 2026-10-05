@@ -57,7 +57,7 @@ export function Navbar({
                     <div className="navbar-brand">
                         <div className="brand-logo-icon">🔥</div>
                         <div className="brand-text">
-                            <span className="brand-title">TaskPulse</span>
+                            <span className="brand-title">Declutter</span>
                         </div>
                     </div>
                 </div>

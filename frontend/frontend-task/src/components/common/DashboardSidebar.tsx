@@ -48,7 +48,7 @@ export function DashboardSidebar({
                     <div className="desk-brand-group">
                         <span className="desk-brand-flame">🔥</span>
                         <div className="desk-brand-names">
-                            <span className="desk-brand-title">TaskPulse</span>
+                            <span className="desk-brand-title">Declutter</span>
                             <span className="desk-brand-subtitle">High Urgency Engine</span>
                         </div>
                     </div>
@@ -227,7 +227,7 @@ export function DashboardSidebar({
                     </div>
                     {!isCollapsed && (
                         <div className="desk-user-info">
-                            <span className="desk-user-name">{user?.name || 'TaskPulse User'}</span>
+                            <span className="desk-user-name">{user?.name || 'Declutter User'}</span>
                             <span className="desk-user-email">{user?.email}</span>
                         </div>
                     )}

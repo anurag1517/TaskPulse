@@ -13,6 +13,7 @@ export function AuthPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -29,6 +30,7 @@ export function AuthPage() {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError(null);
+        setConfirmPasswordError(null);
         setSuccessMessage(null);
 
         if (!isLogin) {
@@ -39,6 +41,7 @@ export function AuthPage() {
             }
             if (password !== confirmPassword) {
                 setError('Passwords do not match. Please verify your password confirmation.');
+                setConfirmPasswordError('Passwords do not match');
                 setMascotMood('p1_angry');
                 return;
             }
@@ -55,6 +58,7 @@ export function AuthPage() {
                 setIsLogin(true);
                 setPassword('');
                 setConfirmPassword('');
+                setConfirmPasswordError(null);
                 setMascotMood('celebrate');
             }
         } catch (err: any) {
@@ -134,6 +138,7 @@ export function AuthPage() {
                                 onClick={() => {
                                     setIsLogin(true);
                                     setError(null);
+                                    setConfirmPasswordError(null);
                                     setSuccessMessage(null);
                                     setConfirmPassword('');
                                     setMascotMood('idle');
@@ -147,6 +152,7 @@ export function AuthPage() {
                                 onClick={() => {
                                     setIsLogin(false);
                                     setError(null);
+                                    setConfirmPasswordError(null);
                                     setSuccessMessage(null);
                                     setConfirmPassword('');
                                     setMascotMood('idle');
@@ -176,7 +182,10 @@ export function AuthPage() {
                                 type="password"
                                 placeholder="••••••••••••"
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                onChange={(e) => {
+                                    setPassword(e.target.value);
+                                    if (confirmPasswordError) setConfirmPasswordError(null);
+                                }}
                                 onFocus={() => setMascotMood('peek')}
                                 onBlur={() => setMascotMood('idle')}
                                 required
@@ -189,10 +198,13 @@ export function AuthPage() {
                                     type="password"
                                     placeholder="••••••••••••"
                                     value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    onChange={(e) => {
+                                        setConfirmPassword(e.target.value);
+                                        if (confirmPasswordError) setConfirmPasswordError(null);
+                                    }}
                                     onFocus={() => setMascotMood('peek')}
                                     onBlur={() => setMascotMood('idle')}
-                                    error={confirmPassword && !passwordsMatch ? 'Passwords do not match' : undefined}
+                                    error={confirmPasswordError || undefined}
                                     required
                                 />
                             )}
